@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 116" preserveAspectRatio="none">
+ <defs>
+  <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+   <stop stop-color="#2b2130" offset="0"/>
+   <stop stop-color="#0d1019" offset=".43"/>
+   <stop stop-color="#1f1521" offset="1"/>
+  </linearGradient>
+  <linearGradient id="edge" x1="0" y1="0" x2="1" y2=".5">
+   <stop stop-color="#7f5535"/>
+   <stop stop-color="#e2b875" offset=".17"/>
+   <stop stop-color="#9c673e" offset=".48"/>
+   <stop stop-color="#edc58b" offset=".81"/>
+   <stop stop-color="#6e482f" offset="1"/>
+  </linearGradient>
+ </defs>
+ <path d="M20 58 Q48 35 82 12 Q94 7 114 7 H1086 Q1106 7 1118 12 Q1152 35 1180 58 Q1152 81 1118 104 Q1106 109 1086 109 H114 Q94 109 82 104 Q48 81 20 58Z" fill="#06080e" stroke="#07080e" stroke-width="11"/>
+ <path d="M20 58 Q48 35 82 12 Q94 7 114 7 H1086 Q1106 7 1118 12 Q1152 35 1180 58 Q1152 81 1118 104 Q1106 109 1086 109 H114 Q94 109 82 104 Q48 81 20 58Z" fill="url(#body)" stroke="url(#edge)" stroke-width="3"/>
+ <path d="M38 58 Q63 36 90 23 Q101 18 119 18 H1081 Q1099 18 1110 23 Q1137 36 1162 58 Q1137 80 1110 93 Q1099 98 1081 98 H119 Q101 98 90 93 Q63 80 38 58Z" fill="none" stroke="#855736" stroke-width="1.5" opacity=".7"/>
+ <path d="M115 15 H1085 M115 101 H1085" stroke="#f3d499" stroke-width=".8" opacity=".45"/>
+ <path d="M25 58 L64 58 M1136 58 L1175 58" stroke="#e2ba7e" stroke-width="1.4"/>
+ <path d="M57 58 L72 44 L87 58 L72 72Z M1143 58 L1128 44 L1113 58 L1128 72Z" fill="#221722" stroke="#d4a46d" stroke-width="2"/>
+ <path d="M71 58 L86 58 M1114 58 L1129 58" stroke="#c9965f"/>
+ <path d="M585 107 L600 91 L615 107 L600 115Z" fill="#21121b" stroke="#dfb579" stroke-width="2"/>
+ <circle cx="600" cy="104" r="4.3" fill="#cb9e65"/>
+</svg>

@@ -1,3 +1,11 @@
+## Version 0.4.7 – geschwungene Silhouette statt dekorierter Rechtecke
+
+Grundformen des echten HUDs neu gestaltet: **mittige, spitz auslaufende ovale Navigationskapsel** (SVG), separate ovale Systemsteuerung, angeschrägte Ecken und Konturornamente an den Seitenpanels, ein schlankeres Chat-/Werkzeug-Dock, reduzierte Chatkarten, hexagonale Würfelschaltflächen, getrennte Charakterinstrumente und kompakte, geschwungene Initiative-Anzeige.
+
+Das sind **echte HTML/CSS/SVG-Änderungen** im Modul, keine Konzeptbilddateien. Die Oberfläche nutzt die vorhandene Foundry-Karte und Charakterdaten. Keine neuen JavaScript-Hooks oder Polling-Schleifen. Syntax, SVG-Dateien und Manifest geprüft; Sichttest in deiner laufenden Foundry-v14-Welt ist weiterhin erforderlich.
+
+---
+
 ## Version 0.4.6 – Immersive Dark Fantasy
 
 Neue **tatsächliche HUD-Gestaltung** nach dem freigegebenen Bildkonzept (keine eingebettete Bildgenerierung): schwebende, kompakte Navigations- und Systemmenüs, schmalere anliegende Chat- und rechte Docks, feinere vergoldete Rahmen, kreisförmiges Charakterportrait und eine kompakte Übersicht der sechs D&D-5e-Attribute. Die Initiative- und Aktionskarten wurden optisch angeglichen.
