@@ -1,41 +1,32 @@
-## Version 0.4.7 – geschwungene Silhouette statt dekorierter Rechtecke
+## Version 0.4.8 – Attributswürfe & Token-Drag-and-Drop
 
-Grundformen des echten HUDs neu gestaltet: **mittige, spitz auslaufende ovale Navigationskapsel** (SVG), separate ovale Systemsteuerung, angeschrägte Ecken und Konturornamente an den Seitenpanels, ein schlankeres Chat-/Werkzeug-Dock, reduzierte Chatkarten, hexagonale Würfelschaltflächen, getrennte Charakterinstrumente und kompakte, geschwungene Initiative-Anzeige.
+- Klick auf eines der sechs Attributssiegel (STR, GES, KON, INT, WEI, CHA) öffnet **Attributsprobe** und **Rettungswurf**. Ein zweiter Klick schließt die Auswahl. Die Würfe laufen über die nativen D&D-5e-Aktor-Methoden inklusive ihrer Wurfoptionen, Profizienzen und Effekte; es werden keine eigenen Würfelformeln erfunden.
+- Akteure im rechten Verzeichnis sowie verfügbare Gruppenmitglieder und das kleine Charakterporträt lassen sich auf die Karte ziehen. Das HUD sendet den dokumentierten Foundry-Actor-Drag-Payload; **Foundry übernimmt das Platzieren, Raster und die Berechtigungen**. Der GM kann alle Akteure ziehen, Spieler nur Figuren, die sie besitzen. Das Erstellen von Tokens durch Spieler kann zusätzlich durch Foundry-Berechtigungen beschränkt sein.
+- Die Attributskarten besitzen feinere Goldkonturen, eine eigenständige achteckige Silhouette sowie passende, kleine Auswahlmenüs. Zusätzliche externe Abhängigkeiten, Fonts und Timer werden nicht geladen.
+- Keine Änderung an Chat, Initiative, Modulverwaltung oder GM-Undo.
 
-Das sind **echte HTML/CSS/SVG-Änderungen** im Modul, keine Konzeptbilddateien. Die Oberfläche nutzt die vorhandene Foundry-Karte und Charakterdaten. Keine neuen JavaScript-Hooks oder Polling-Schleifen. Syntax, SVG-Dateien und Manifest geprüft; Sichttest in deiner laufenden Foundry-v14-Welt ist weiterhin erforderlich.
-
----
-
-## Version 0.4.6 – Immersive Dark Fantasy
-
-Neue **tatsächliche HUD-Gestaltung** nach dem freigegebenen Bildkonzept (keine eingebettete Bildgenerierung): schwebende, kompakte Navigations- und Systemmenüs, schmalere anliegende Chat- und rechte Docks, feinere vergoldete Rahmen, kreisförmiges Charakterportrait und eine kompakte Übersicht der sechs D&D-5e-Attribute. Die Initiative- und Aktionskarten wurden optisch angeglichen.
-
-**Keine neue Runtime-Schleife:** Die Gestaltung nutzt CSS und die bereits vorhandenen kleinen SVG-Verzierungen; die Attributwerte stammen aus dem ohnehin geladenen Actor-Dokument. Alle bisherigen Funktionen bleiben bestehen. Die aktuelle Szene bestimmt weiterhin den Kartenhintergrund. Die UI wurde in einer isolierten Browser-Nachbildung geprüft; der Live-Test in Foundry v14 steht noch aus.
+**Teststand:** JavaScript-/JSON-/CSS-Prüfung und isolierte Funktionstests für Würfe und Drag-Daten. Ein Browser-Sichttest wurde durch die Testumgebung blockiert. In Foundry v14 mit der installierten D&D-5e-Version noch nicht live getestet.
 
 ---
 
-## Installation & automatische Updates über GitHub Releases
+## Version 0.4.7 – Silhouette-Design (kein Screenshot-Skin)
 
-**Foundry VTT v14** · Modul-ID `silber-hud-overhaul`
+Grundlegende Überarbeitung der **tatsächlichen UI-Konturen**: obere Menüführung als mittig schwebende, an den Enden spitz zulaufende Navigationskapsel (eigenes kleines SVG); separate, ovale Systemsteuerung; seitliche Panels mit angeschnittenen Ecken, transparent abgestuften Flächen und Ornamenten im Rahmen; schmalere Werkzeugleiste, runde Buttons, reduzierte Chat-Karten und hexagonale Würfeltasten. Der rechte Charakterbereich wurde in Porträt-, TP-, Attribut- und Aktions-Instrumente aufgeteilt.
 
-In Foundry im **Setup** (nicht innerhalb einer Welt) → **Zusatzmodule** → **Modul installieren** die folgende Manifest-URL einfügen:
+* Ohne neue Module oder JavaScript-Hooks: reine CSS/SVG-Änderungen auf den vorhandenen Foundry-Elementen.
+* Nur echte Welt-/Charakterdaten; Karten, Porträts und Chatmeldungen werden nicht erfunden.
+* Die vorherigen Einstellungen, der Enter-Chat, die Gruppenliste, die Aktionen, das Initiative-Karussell und GM-Undo bleiben erhalten.
+* Hinweis: CSS/JSON/JS validiert, ein vollständiger Sichttest in Foundry v14 steht noch aus.
 
-```text
-https://github.com/Shining-Moon-54/silbers-HUD-Overhaul/releases/latest/download/module.json
-```
+---
 
-Danach das Modul in der gewünschten Welt aktivieren. Für neue Versionen lässt sich die normale **Modul aktualisieren**-Funktion in Foundry verwenden. Wenn das HUD bisher nur manuell als ZIP kopiert wurde, vor der Neuinstallation die Welt sichern und keine parallele Installation desselben Moduls anlegen.
+# Silber HUD Overhaul v0.4.6 – Immersive Dark Fantasy
 
-**GitHub Releases:** https://github.com/Shining-Moon-54/silbers-HUD-Overhaul/releases
+Visuelles Update des tatsächlichen Spiel-HUDs nach der abgestimmten Designvorlage: schwebende schmale Navigationsinsel, separates Systemmenü, transparent anmutende dunkelrote Panels, filigrane Goldkonturen, runde Charakterporträts, veredelter Chat mit angedockter Werkzeugleiste sowie neu proportionierte Gruppen-, Charakter- und Initiativeanzeige mit sechs D&D-5e-Attributswerten.
 
-### Neue Version veröffentlichen
+Die Änderungen liegen in `styles/theme-immersive.css` und benötigen **keine weiteren Hooks, Animationen, externen Bilder oder Webfonts**. Das tatsächliche Kartenmotiv kommt weiterhin aus der aktiven Foundry-Szene; die generierte Konzeptillustration wird nicht als Kartenhintergrund verwendet.
 
-1. In `module.json` die `version` erhöhen (beispielsweise auf `0.4.6`).
-2. Die Änderungen auf `main` pushen.
-3. GitHub Actions → **Publish Foundry module** erstellt bei einer noch nicht veröffentlichten Version automatisch Tag, Release, installierbare `silber-hud-overhaul.zip` und releasegebundene `module.json`.
-4. Der stabile Manifest-Link bleibt dabei identisch. Für einen Versionswechsel immer die Versionsnummer erhöhen; ein vorhandenes Release wird nicht überschrieben.
-
-Der Workflow erfordert in GitHub Actions die Berechtigung **Contents: write**, die in der Workflow-Datei angefordert wird. Sollten Repository-Richtlinien das verweigern, die Workflow-Berechtigungen in GitHub unter *Settings → Actions → General* prüfen.
+Die bisherigen Bedienelemente (Enter-Chat, Dice Tray, Spell/Waffen-Aktivitäten, GM-Undo und originale Foundry-Einstellungen) bleiben unverändert. UI-Layout sollte in einer Testwelt und mit deiner Bildschirmgröße geprüft werden; es handelt sich um ein Design-Update, keine neue Foundry-Engine.
 
 ---
 

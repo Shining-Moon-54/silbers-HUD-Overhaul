@@ -1,5 +1,5 @@
 import { registerUndoTracker, getUndoHistory, subscribeUndo, undoLastStep, discardLatestUndo } from "./undo.mjs";
-/** Silber HUD Overhaul 0.4.4 - Foundry VTT 14 / dnd5e 6.x, performance update. */
+/** Silber HUD Overhaul 0.4.8 - Foundry VTT 14 / dnd5e 6.x, rollable abilities and token dragging. */
 const MOD = "silber-hud-overhaul";
 const ROOT_ID = "shud-root";
 const tabs = ["actions", "spells", "features", "inventory", "details"];
@@ -9,7 +9,7 @@ const state = { root: null, actorId: null, actorTokenId: null, tab: "spells", me
   composing: false, rollModifier: 0, railOpen: null, railMore: false, submitting: false,
   chatMountPromise: null, chatFallbackRendering: false, chatDebugVisible: false,
   enterSeen: {keydown: 0, keyup: 0, keybind: 0}, suppressEnterKeyup: false, lastEnterInfo: "Noch kein Enter erkannt",
-  trackerCollapsed: false, trackerObserver: null, expandedEntry: null };
+  trackerCollapsed: false, trackerObserver: null, expandedEntry: null, expandedAbility: null };
 
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -239,6 +239,7 @@ function createHUD() {
   document.body.append(root);
   state.root = root;
   root.addEventListener("click", onHUDClick);
+  root.addEventListener("dragstart", onHUDActorDragStart);
   root.addEventListener("input", onHUDInput);
   root.addEventListener("keydown", onComposeKeydown, true);
   // Capture on WINDOW, not document: Foundry/other modules may stop events at
@@ -556,7 +557,7 @@ async function onHUDClick(event) {
   // The embedded native chat needs all of its own clicks and event delegation.
   // Don't prevent its roll-card, context-menu, speaker or chat message actions.
   if (button.closest(".shud-embedded-chat")) return;
-  if (!button.matches("[data-menu],[data-toggle],[data-die],[data-mod],[data-control-id],[data-control-tool],[data-rail-more],[data-native-tab],[data-open-doc],[data-focus-token],[data-tab],[data-actor],[data-item-sheet],[data-entry-toggle],[data-spell-action],[data-action],[data-initiative-toggle],[data-initiative-action],[data-initiative-focus],[data-view-actor]")) return;
+  if (!button.matches("[data-menu],[data-toggle],[data-die],[data-mod],[data-control-id],[data-control-tool],[data-rail-more],[data-native-tab],[data-open-doc],[data-focus-token],[data-tab],[data-actor],[data-item-sheet],[data-entry-toggle],[data-spell-action],[data-action],[data-initiative-toggle],[data-initiative-action],[data-initiative-focus],[data-view-actor],[data-ability-toggle],[data-ability-roll]")) return;
   event.preventDefault();
   event.stopPropagation();
   // Release retained button focus so Enter reopens the composer after UI actions.
@@ -673,7 +674,15 @@ async function onHUDClick(event) {
     } catch (err) { reportError(err); }
     return;
   }
-  if (button.dataset.tab) { state.tab = button.dataset.tab; saveState(); refreshCharacter(); return; }
+  if (button.dataset.abilityToggle) {
+    toggleAbilityOptions(button);
+    return;
+  }
+  if (button.dataset.abilityRoll) {
+    await rollAbilityFromHUD(button);
+    return;
+  }
+  if (button.dataset.tab) { state.tab = button.dataset.tab; state.expandedAbility = null; saveState(); refreshCharacter(); return; }
   if (button.dataset.viewActor) {
     const actor = game.actors.get(button.dataset.viewActor);
     if (hasAccess(actor)) actor.sheet?.render(true);
@@ -689,6 +698,7 @@ async function onHUDClick(event) {
       const wasSelected = getActor()?.id === actor.id;
       state.actorTokenId = null;
       state.actorId = wasSelected ? null : actor.id;
+      state.expandedAbility = null;
       refreshEverything();
       setMenu(null);
     } else ui.notifications.warn("Kein Zugriff auf diese Figur.");
@@ -808,10 +818,13 @@ function refreshParty() {
     const tooltip = game.user.isGM
       ? `${actor.name} – ${active ? "Auswahl mit Linksklick aufheben" : "Mit Linksklick auswählen"}`
       : `${actor.name} – Hauptcharakter wird in Foundry zugewiesen`;
-    const inner = `<img src="${img(actor.img)}" alt=""><span class="shud-party-copy"><b>${escapeHtml(actor.name)}</b><small>${hp.current} / ${hp.max} TP ${online ? "· online" : ""}</small><span class="shud-hp-track"><span style="width:${hp.pct}%"></span></span></span>`;
+    const inner = `<img src="${img(actor.img)}" alt="" draggable="false"><span class="shud-party-copy"><b>${escapeHtml(actor.name)}</b><small>${hp.current} / ${hp.max} TP ${online ? "· online" : ""}</small><span class="shud-hp-track"><span style="width:${hp.pct}%"></span></span></span>`;
+    const canDrag = game.user.isGM || owned(actor);
+    const dragAttrs = canDrag ? `draggable="true" data-drag-actor="${escapeHtml(actor.id)}"` : "";
+    const dragHint = canDrag ? " · Zum Platzieren auf die Karte ziehen" : "";
     rows.push(game.user.isGM
-      ? `<button type="button" class="shud-party-member ${active ? "is-current" : ""}" data-actor="${escapeHtml(actor.id)}" aria-pressed="${active}" title="${escapeHtml(tooltip)}">${inner}</button>`
-      : `<div class="shud-party-member ${active ? "is-current" : ""} shud-party-readonly" title="${escapeHtml(tooltip)}">${inner}</div>`);
+      ? `<button type="button" class="shud-party-member ${active ? "is-current" : ""}" data-actor="${escapeHtml(actor.id)}" ${dragAttrs} aria-pressed="${active}" title="${escapeHtml(tooltip + dragHint)}">${inner}</button>`
+      : `<div class="shud-party-member ${active ? "is-current" : ""} shud-party-readonly" ${dragAttrs} title="${escapeHtml(tooltip + dragHint)}">${inner}</div>`);
   };
   // The player's own main character is always the first entry on the left.
   const users = Array.from(game.users);
@@ -846,12 +859,15 @@ function refreshActors() {
   const rows = actors.map(a => {
     const isCurrent = game.user.isGM && selectedId === a.id;
     const title = escapeHtml(a.name);
-    const pic = `<img src="${img(a.img)}" alt="">`;
+    const pic = `<img src="${img(a.img)}" alt="" draggable="false">`;
     const summary = `<span class="shud-actor-row-copy"><b>${title}</b><small>${escapeHtml(actorLabel(a))}</small></span>`;
+    const canDrag = game.user.isGM || owned(a);
+    const dragAttrs = canDrag ? `draggable="true" data-drag-actor="${escapeHtml(a.id)}"` : "";
+    const dragHint = canDrag ? " · auf die Karte ziehen, um einen Token zu platzieren" : "";
     const select = game.user.isGM
-      ? `<button type="button" class="shud-actor-select ${isCurrent ? "is-current" : ""}" data-actor="${escapeHtml(a.id)}" aria-pressed="${isCurrent}" title="${isCurrent ? "Auswahl aufheben" : "Im Charakterfenster anzeigen"}">${pic}${summary}</button>`
-      : `<span class="shud-actor-readonly">${pic}${summary}</span>`;
-    return `<div class="shud-actor-directory-row" data-actor-row>${select}<button type="button" class="shud-actor-sheet" data-view-actor="${escapeHtml(a.id)}" aria-label="Bogen von ${title} öffnen" title="Original-Charakterbogen öffnen">${icon("up-right-from-square")}</button></div>`;
+      ? `<button type="button" class="shud-actor-select ${isCurrent ? "is-current" : ""}" data-actor="${escapeHtml(a.id)}" ${dragAttrs} aria-pressed="${isCurrent}" title="${isCurrent ? "Auswahl aufheben" : "Im Charakterfenster anzeigen"}${dragHint}">${pic}${summary}</button>`
+      : `<span class="shud-actor-readonly" ${dragAttrs} title="${escapeHtml(a.name)}${dragHint}">${pic}${summary}</span>`;
+    return `<div class="shud-actor-directory-row ${canDrag ? "shud-can-drag" : ""}" data-actor-row>${select}<button type="button" class="shud-actor-sheet" data-view-actor="${escapeHtml(a.id)}" aria-label="Bogen von ${title} öffnen" title="Original-Charakterbogen öffnen">${icon("up-right-from-square")}</button></div>`;
   }).join("");
   host.innerHTML = `<div class="shud-actor-directory-head"><label for="shud-actor-search">${actors.length} zugängliche Akteure</label><input id="shud-actor-search" type="search" placeholder="Akteure suchen …" autocomplete="off" aria-label="Akteure suchen" value="${escapeHtml(state.actorFilter)}"><button type="button" data-native-tab="actors">${icon("folder-open")} Original-Akteursverzeichnis</button></div><div class="shud-actor-directory-list">${rows || `<p class="shud-empty">Keine zugänglichen Akteure.</p>`}</div>`;
   filterActors();
@@ -867,6 +883,79 @@ function filterActors() {
   });
 }
 
+/** Roll from the actor's own D&D 5e implementation, not a fabricated d20
+ * formula, so proficiency, active effects, advantage and the standard roll
+ * dialog all remain intact. Kept small; only called on actual user clicks. */
+async function rollAbilityFromHUD(button) {
+  const key = button.dataset.abilityKey;
+  const kind = button.dataset.abilityRoll;
+  if (!["str", "dex", "con", "int", "wis", "cha"].includes(key) || !["check", "save"].includes(kind)) return;
+  const actor = getActor();
+  if (!actor || !owned(actor)) {
+    ui.notifications?.warn?.("Für diese Figur hast du keine Berechtigung zum Würfeln.");
+    return;
+  }
+  if (game.system.id !== "dnd5e") {
+    ui.notifications?.warn?.("Attributs- und Rettungswürfe erfordern D&D 5e.");
+    return;
+  }
+  const method = kind === "check" ? actor.rollAbilityCheck : actor.rollSavingThrow;
+  if (typeof method !== "function") {
+    ui.notifications?.error?.("Diese D&D-5e-Version unterstützt den angeforderten Wurf nicht.");
+    return;
+  }
+  try {
+    // D&D5e v5+/v6 uses an ability configuration object.
+    await method.call(actor, {ability: key});
+    state.expandedAbility = null;
+    updateAbilityOptions();
+  } catch (error) { reportError(error); }
+}
+
+function updateAbilityOptions() {
+  const host = state.root?.querySelector("#shud-character-body");
+  if (!host) return;
+  host.querySelectorAll(".shud-ability-tile").forEach(tile => {
+    const expanded = tile.dataset.abilityId === state.expandedAbility;
+    tile.classList.toggle("is-expanded", expanded);
+    const popup = tile.querySelector(".shud-ability-choices");
+    if (popup) popup.hidden = !expanded;
+    const trigger = tile.querySelector(".shud-ability-trigger");
+    if (trigger) trigger.setAttribute("aria-expanded", String(expanded));
+  });
+}
+
+function toggleAbilityOptions(button) {
+  const key = button.dataset.abilityToggle;
+  if (!["str", "dex", "con", "int", "wis", "cha"].includes(key)) return;
+  state.expandedAbility = state.expandedAbility === key ? null : key;
+  updateAbilityOptions();
+}
+
+/** Provide the same payload as Foundry's Actor Directory. The Canvas layer
+ * owns token placement, grid snapping and permission checks. This deliberately
+ * does not create embedded documents or install a competing drop handler. */
+function onHUDActorDragStart(event) {
+  const element = event.target.closest?.("[data-drag-actor]");
+  if (!element || !state.root?.contains(element)) return;
+  const actor = game.actors?.get(element.dataset.dragActor);
+  if (!actor || !(game.user.isGM || owned(actor))) {
+    event.preventDefault();
+    return;
+  }
+  const payload = typeof actor.toDragData === "function"
+    ? actor.toDragData()
+    : {type:"Actor", uuid:actor.uuid};
+  if (!payload?.uuid || !event.dataTransfer) {
+    event.preventDefault();
+    return;
+  }
+  event.dataTransfer.setData("text/plain", JSON.stringify(payload));
+  event.dataTransfer.effectAllowed = "copy";
+  element.classList.add("shud-is-dragging");
+  element.addEventListener("dragend", () => element.classList.remove("shud-is-dragging"), {once:true});
+}
+
 function refreshCharacter() {
   if (!state.panels.character) return;
   const host = state.root?.querySelector("#shud-character-body"); if (!host) return;
@@ -880,20 +969,31 @@ function refreshCharacter() {
   if (!hasAccess(actor)) { host.innerHTML = `<div class="shud-empty">Kein Zugriff.</div>`; return; }
   const stats = hpStats(actor);
   const tp = escapeHtml(stats.current) + " / " + escapeHtml(stats.max);
-  // Show the existing D&D 5e ability values in a compact, read-only grid.
-  // No actor queries or extra hooks: this is generated only with the character panel.
+  // D&D5e dice widgets: one click reveals ability check and saving throw.
+  // No per-tile event listeners; one existing delegated HUD click listener.
   const abilityLabels = {str:"STR", dex:"GES", con:"KON", int:"INT", wis:"WEI", cha:"CHA"};
   const abilities = actor.system?.abilities ?? {};
+  const canRoll = game.system.id === "dnd5e" && owned(actor);
   const abilityGrid = Object.entries(abilityLabels).some(([key]) => abilities[key]?.value !== undefined)
-    ? `<div class="shud-ability-grid" aria-label="Attribute">${Object.entries(abilityLabels).map(([key,label]) => {
+    ? `<div class="shud-ability-grid" aria-label="Attribute und Rettungswürfe">${Object.entries(abilityLabels).map(([key,label]) => {
         const value = abilities[key]?.value ?? "–";
         const mod = abilities[key]?.mod;
         const modText = Number.isFinite(mod) ? (mod >= 0 ? `+${mod}` : String(mod)) : "";
-        return `<div class="shud-ability-tile"><b>${label}</b><strong>${escapeHtml(value)}</strong><small>${escapeHtml(modText)}</small></div>`;
+        const expanded = state.expandedAbility === key;
+        return `<div class="shud-ability-tile ${expanded ? "is-expanded" : ""}" data-ability-id="${key}">
+          <button type="button" class="shud-ability-trigger" data-ability-toggle="${key}" aria-expanded="${expanded}" aria-controls="shud-ability-actions-${key}" title="${label}: Attributsprobe oder Rettungswurf auswählen" ${canRoll ? "" : "disabled"}>
+            <b>${label}</b><strong>${escapeHtml(value)}</strong><small>${escapeHtml(modText)}</small>
+          </button>
+          <div id="shud-ability-actions-${key}" class="shud-ability-choices" ${expanded ? "" : "hidden"}>
+            <span class="shud-ability-popup-title">${label} würfeln</span>
+            <button type="button" data-ability-roll="check" data-ability-key="${key}">${icon("dice-d20")} Attributsprobe</button>
+            <button type="button" data-ability-roll="save" data-ability-key="${key}">${icon("shield-halved")} Rettungswurf</button>
+          </div>
+        </div>`;
       }).join("")}</div>`
     : "";
   host.innerHTML = `
-    <div class="shud-hero"><img src="${img(actor.img)}" alt="" class="shud-hero-image"><div class="shud-hero-overlay"><div class="shud-hero-title"><img src="${img(actor.img)}" alt=""><div><h2>${escapeHtml(actor.name)}</h2><small>${escapeHtml(actorLabel(actor))}</small></div></div>${game.user.isGM ? `<button class="shud-choose-character" data-menu="characters" title="Figur auswählen oder abwählen">${icon("users")}</button>` : ""}</div></div>
+    <div class="shud-hero"><img src="${img(actor.img)}" alt="" class="shud-hero-image"><div class="shud-hero-overlay"><div class="shud-hero-title"><img src="${img(actor.img)}" alt="" draggable="${owned(actor) ? "true" : "false"}" ${owned(actor) ? `data-drag-actor="${escapeHtml(actor.id)}" title="Token auf die Karte ziehen"` : ""}><div><h2>${escapeHtml(actor.name)}</h2><small>${escapeHtml(actorLabel(actor))}</small></div></div>${game.user.isGM ? `<button class="shud-choose-character" data-menu="characters" title="Figur auswählen oder abwählen">${icon("users")}</button>` : ""}</div></div>
     <div class="shud-stats"><div><strong>${icon("heart")} ${tp}</strong><small>Trefferpunkte</small></div><div><strong>${icon("shield")} ${escapeHtml(stats.ac)}</strong><small>Rüstungsklasse</small></div><div><strong>${icon("shoe-prints")} ${escapeHtml(stats.movement)}</strong><small>Bewegung</small></div></div>
     ${abilityGrid}
     <div class="shud-tabbar" role="tablist">

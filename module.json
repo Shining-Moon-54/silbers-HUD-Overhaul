@@ -1,8 +1,8 @@
 {
   "id": "silber-hud-overhaul",
   "title": "Silber HUD Overhaul",
-  "description": "Sculpted Dark-Fantasy-HUD mit geschwungener Navigationskapsel, freistehenden Konturen und schlanken Spieldocks.",
-  "version": "0.4.7",
+  "description": "Sculpted Dark-Fantasy-HUD mit interaktiven Attributs- und Rettungswürfen sowie nativer Token-Platzierung via Drag & Drop.",
+  "version": "0.4.8",
   "authors": [
     {
       "name": "Silber HUD Projekt"
@@ -19,7 +19,8 @@
     "styles/hud.css",
     "styles/theme-fantasy.css",
     "styles/theme-immersive.css",
-    "styles/theme-silhouette.css"
+    "styles/theme-silhouette.css",
+    "styles/theme-interactions.css"
   ],
   "languages": [
     {

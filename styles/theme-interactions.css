@@ -1,0 +1,116 @@
+/* Silber HUD 0.4.8 | die sechs Attribute werden zu interaktiven Wurfsiegeln.
+   Bewusst ohne zusätzliche Bild-/Webfont-Abhängigkeiten oder JS-Animationen. */
+#shud-root .shud-ability-grid {
+  gap: 9px 7px;
+  padding: 13px 13px 18px;
+  isolation:isolate;
+  overflow: visible;
+}
+#shud-root .shud-ability-tile {
+  position: relative;
+  padding: 1px;
+  min-height: 63px;
+  overflow: visible;
+  clip-path: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  filter: drop-shadow(0 3px 4px #05080c7a);
+}
+#shud-root .shud-ability-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(148deg,#e2b976 0%,#76503a 38%,#292333 63%,#b98950 100%);
+  clip-path: polygon(11px 0, calc(100% - 11px) 0, 100% 11px, 100% calc(100% - 11px),calc(100% - 11px) 100%,11px 100%,0 calc(100% - 11px),0 11px);
+}
+#shud-root .shud-ability-trigger {
+  position: relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-height:61px;
+  gap:2px;
+  padding:4px 5px;
+  border:0;
+  color:#f5d9a9;
+  background:radial-gradient(ellipse at 50% -15%,#65304383,transparent 63%), linear-gradient(160deg,#211722 5%,#0d111b 84%);
+  clip-path:polygon(11px 0,calc(100% - 11px) 0,100% 11px,100% calc(100% - 11px),calc(100% - 11px) 100%,11px 100%,0 calc(100% - 11px),0 11px);
+  cursor:pointer;
+  transition: background .15s ease, color .15s ease;
+}
+#shud-root .shud-ability-trigger::before {
+  content:"◆";
+  position:absolute;
+  left:7px;
+  top:4px;
+  font-size:7px;
+  color:#b1814e;
+  opacity:.8;
+}
+#shud-root .shud-ability-trigger b {font: 700 10px Georgia,serif;letter-spacing:1px;color:#edcb8e}
+#shud-root .shud-ability-trigger strong {font: 700 21px Georgia,serif;line-height:1.08;color:#fff2d5}
+#shud-root .shud-ability-trigger small {font: 11px Georgia,serif;color:#cdb28b}
+#shud-root .shud-ability-trigger:hover,
+#shud-root .shud-ability-trigger:focus-visible,
+#shud-root .shud-ability-tile.is-expanded .shud-ability-trigger {
+  outline: none;
+  background:radial-gradient(ellipse at 50% 0,#843344ba,transparent 74%), linear-gradient(150deg,#402234,#15121d);
+  color:#ffdeb1;
+}
+#shud-root .shud-ability-tile:has(.shud-ability-trigger:hover)::before,
+#shud-root .shud-ability-tile.is-expanded::before {background:linear-gradient(150deg,#ffdb9b,#a86739 44%,#d8a261 100%)}
+#shud-root .shud-ability-choices {
+  position:absolute;
+  z-index:20;
+  top:calc(100% + 6px);
+  left:0;
+  width:190px;
+  padding:8px;
+  display:grid;
+  gap:5px;
+  border:1px solid #bb925c;
+  clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px),0 10px);
+  background:linear-gradient(160deg,#32202e,#10121b 85%);
+  box-shadow:0 10px 24px #000b;
+}
+#shud-root .shud-ability-choices[hidden] {display:none !important}
+#shud-root .shud-ability-tile:nth-child(3n) .shud-ability-choices {left:auto;right:0}
+#shud-root .shud-ability-popup-title {display:block;text-align:center;letter-spacing:.8px;font: 700 11px Georgia,serif;color:#e6c392;padding:1px 0 5px;border-bottom:1px solid #8b624950}
+#shud-root .shud-ability-choices button {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  width:100%;
+  min-height:34px;
+  padding:7px 8px;
+  color:#f6e1bb;
+  background:#281c29;
+  border:1px solid #77533d;
+  text-align:left;
+  font: 600 11px Georgia,serif;
+  cursor:pointer;
+  border-radius:4px;
+}
+#shud-root .shud-ability-choices button:hover,
+#shud-root .shud-ability-choices button:focus-visible {background:#6f2b3b;border-color:#eac087;outline:none}
+#shud-root .shud-ability-choices .shud-svg-icon {width:15px;height:15px;flex:none;color:#e9b77c}
+#shud-root .shud-ability-trigger:disabled {opacity:.65;cursor:default}
+/* Token can be dragged from the native-data actor cards, party or portrait.
+   The Canvas owns drop handling and never needs an extra renderer. */
+#shud-root [data-drag-actor] {cursor:grab}
+#shud-root [data-drag-actor]:active,
+#shud-root [data-drag-actor].shud-is-dragging {cursor:grabbing}
+#shud-root .shud-actor-directory-row.shud-can-drag {border-left:2px solid #b99158}
+#shud-root .shud-actor-directory-row.shud-can-drag:hover {box-shadow:inset 0 0 15px #9b5f3230}
+#shud-root .shud-hero-title img[data-drag-actor] {cursor:grab}
+@media(max-width:1050px) {
+  #shud-root .shud-ability-choices {width:170px}
+}
+@media(prefers-reduced-motion:reduce) {
+  #shud-root .shud-ability-trigger {transition:none}
+}
