@@ -1,0 +1,357 @@
+/* Silber HUD Overhaul v0.4.6 — Immersive Dark Fantasy
+ * Visual-only theme refinements inspired by the approved concept image.
+ * CSS is scoped to #shud-root. No extra observers, polling, shaders or raster UI backgrounds.
+ * Keep the Foundry canvas and native configuration screens unchanged.
+ */
+#shud-root {
+  --shud-night:#0c0d16;
+  --shud-wine:#421420;
+  --shud-garnet:#742437;
+  --shud-champagne:#f2dfbe;
+  --shud-antique:#c99a5b;
+  --shud-antique-bright:#ebc489;
+  --shud-fine-line:#775136;
+  --shud-left-chat-width:clamp(288px,19vw,352px);
+  font-family: "Signika", system-ui, sans-serif;
+  color:var(--shud-champagne);
+}
+
+/* Floating menu: left navigation and right system controls form two slim islands,
+   not a full-width black application bar. Everything remains keyboard reachable. */
+#shud-root .shud-topbar {
+  top:10px; height:48px; padding:0; gap:0;
+  border:none; border-radius:0;
+  background:transparent; box-shadow:none;
+  pointer-events:none;
+  align-items:center;
+}
+#shud-root .shud-topbar::after {display:none}
+#shud-root .shud-sigil {display:none}
+#shud-root .shud-menus {
+  width:max-content; flex:0 1 auto; min-width:0; gap:0;
+  padding:3px 7px; align-items:center; pointer-events:auto;
+  border:1px solid var(--shud-antique);
+  border-radius:7px 7px 11px 11px;
+  background:linear-gradient(160deg,#211924f7,#0d1119f4 58%,#21131ef7);
+  box-shadow:0 0 0 2px #160f14,0 8px 24px #000a,inset 0 1px #f1ca8350;
+}
+#shud-root .shud-menus::after {
+  content:"✥"; display:block; flex:none;
+  margin:0 6px 0 2px; color:#d2a167; font:13px Georgia,serif;
+}
+#shud-root .shud-menus button {
+  flex:none; padding:8px 12px; min-height:36px; gap:8px;
+  border:1px solid transparent; border-radius:4px;
+  color:#eed4ad; background:transparent;
+  font:600 13px Georgia,serif;
+  box-shadow:none;
+}
+#shud-root .shud-menus button + button {border-left:1px solid #a67b4d35}
+#shud-root .shud-menus button:is(.is-active,:hover) {
+  border-color:#cd975a;
+  color:#ffedc8;
+  background:linear-gradient(165deg,#742134,#32101f);
+  box-shadow:inset 0 1px #f6d69d50,0 0 0 1px #291019;
+}
+#shud-root .shud-top-right {
+  margin-left:auto; padding:4px 5px; gap:2px;
+  align-items:center; flex:none; pointer-events:auto;
+  border:1px solid #ac7b4a; border-radius:8px;
+  background:linear-gradient(140deg,#1f1822f7,#0b101af5);
+  box-shadow:0 0 0 2px #140d12,0 8px 24px #000a,inset 0 1px #efd5a44d;
+}
+#shud-root .shud-top-right button {
+  height:30px; width:31px; border-radius:5px; font-size:15px; color:#eac490;
+}
+#shud-root .shud-top-right button:hover {color:#fff0d1;background:#54202b}
+#shud-root .shud-menu-popup {top:62px;border-radius:8px}
+
+/* Shared carved, gold-edged surface. Small ornamental linework stays in CSS/SVG.
+   Avoid backdrop-filter (costly when the map pans) and infinite glow animations. */
+#shud-root :is(.shud-panel,.shud-initiative-frame,.shud-menu-popup) {
+  border:1px solid #b68b52;
+  border-radius:7px;
+  background:linear-gradient(158deg,#16131ff5 0%,#0c1019f6 48%,#16101df4 100%);
+  box-shadow:0 0 0 1px #1c1014,0 0 0 2px #68462d80,0 12px 24px #000a,
+    inset 0 1px #f4cc875c,inset 1px 0 #c48e4c2a;
+}
+#shud-root .shud-panel::after {
+  content:""; display:block; pointer-events:none; position:absolute;
+  right:2px;bottom:2px;width:39px;height:39px;
+  background:url("../assets/corner-scroll.svg") center/contain no-repeat;
+  opacity:.63; transform:rotate(180deg); z-index:1;
+}
+#shud-root .shud-panel-header {
+  min-height:45px;padding:9px 13px;
+  background-image:url("../assets/gilded-flourish.svg"),linear-gradient(95deg,#491a2b 0%,#231522 55%,#101019 100%);
+  background-size:102px 24px,auto;
+  background-position:calc(100% - 43px) center,center;
+  border-bottom:1px solid #a47d46;
+}
+#shud-root .shud-panel-header strong {
+  font:600 17px/1.2 Georgia,serif;
+  letter-spacing:.2px;color:#ffe1b1;
+}
+#shud-root .shud-panel-header button {
+  width:26px;height:27px;background:#16111acc;
+  border-color:#997042;border-radius:5px;color:#e6be83;
+}
+#shud-root .shud-panel-header button:hover {background:#682337}
+
+/* Long left roleplaying log, no bottom action hotbar. Tools are attached to its side. */
+#shud-root .shud-left-dock > .shud-chat {
+  border-radius:0 8px 8px 0;
+  border-right:1px solid #d3a16a;
+  background:linear-gradient(180deg,#201722ef 0%,#11121cf4 29%,#0a1019f4 82%,#20101bee 100%);
+}
+#shud-root .shud-left-dock > .shud-chat::before {
+  content:""; position:absolute;top:49px;left:8px;right:8px;height:14px;z-index:1;
+  pointer-events:none;background:url("../assets/gilded-flourish.svg") center/180px 18px no-repeat;opacity:.7;
+}
+#shud-root .shud-left-dock > .shud-chat .shud-panel-header {
+  background-image:linear-gradient(95deg,#4a1b2c,#1b1320 80%);
+  border-bottom:1px solid #bd915a;
+}
+#shud-root .shud-left-dock > .shud-chat .shud-panel-body {padding-top:13px}
+#shud-root .shud-embedded-chat :is(.chat-message,li.chat-message) {
+  border:0!important;border-bottom:1px solid #805a423a!important;
+  border-left:2px solid #a67b4a85!important;
+  border-radius:3px!important;
+  background:linear-gradient(95deg,#321a2a69,#12131e66)!important;
+  box-shadow:none!important;padding:12px 9px!important;
+  margin:3px 5px 5px!important;
+}
+#shud-root .shud-embedded-chat .message-header {color:#efd6af!important}
+#shud-root .shud-embedded-chat .message-content {font-size:13px;line-height:1.48}
+#shud-root .shud-embedded-chat .dice-roll {border-radius:5px}
+#shud-root .shud-chat-bottom {
+  padding:10px 10px 12px;
+  border-top:1px solid #aa814e;
+  background:linear-gradient(180deg,#241826ec,#120f1cf6);
+}
+#shud-root .shud-chat-tray {gap:4px;min-height:31px}
+#shud-root .shud-chat-tray button {
+  height:31px; min-width:0;padding:3px 0;
+  border:1px solid #997147;border-radius:3px 8px 3px 8px;
+  color:#f3d6a5;background:linear-gradient(150deg,#542237,#1b1521 78%);
+  font:bold 10px Georgia,serif;
+  box-shadow:inset 0 1px #f8d4993a;
+}
+#shud-root .shud-chat-tray button:is(:hover,:focus-visible) {
+  background:linear-gradient(#903246,#381728);border-color:#e8bf7d;
+}
+#shud-root .shud-compose-hint {justify-content:flex-start;height:26px;color:#d3b997}
+#shud-root .shud-compose-hint kbd {border-color:#ac8250;color:#ecd29e}
+#shud-root .shud-left-dock > .shud-toolrail {
+  border-radius:0 9px 12px 0;
+  padding:7px 4px;gap:5px;
+  background:linear-gradient(100deg,#221725f4,#0b1019ed);
+  border-color:#af8857;
+  box-shadow:0 4px 15px #000b,inset 1px 0 #d6b07855;
+}
+#shud-root .shud-left-dock > .shud-toolrail button {
+  height:39px;width:38px;border-radius:4px 9px 4px 9px;
+  background:linear-gradient(#241824,#11141d);
+  border:1px solid #8b6245;
+  color:#e5be82;
+}
+#shud-root .shud-left-dock > .shud-toolrail button:is(.is-active,:hover) {
+  border-color:#e6bb7d;background:linear-gradient(#762638,#321624);
+  box-shadow:inset 0 1px #f7d79b60;
+}
+
+/* Party list, control strip, character frame. Dock expansion logic is untouched. */
+#shud-root .shud-right-dock {--shud-dock-character-width:clamp(325px,21vw,380px);--shud-dock-party-width:195px;--shud-dock-gap:7px}
+#shud-root .shud-right-dock > :is(.shud-party,.shud-actors) {
+  border-color:#b18a55;background:linear-gradient(#251522f4,#10111af7);
+}
+#shud-root .shud-party .shud-panel-body {gap:6px;padding:10px 8px}
+#shud-root .shud-party-member,
+#shud-root .shud-actor-directory-row {
+  padding:7px 6px; min-height:56px; gap:7px; border-radius:5px;
+  border:1px solid #513a37;
+  background:linear-gradient(100deg,#281a2599,#0f121b89);
+}
+#shud-root .shud-party-member:is(:hover,.is-current),
+#shud-root .shud-actor-directory-row:hover {
+  border-color:#d6a66a;background:linear-gradient(110deg,#422431,#17141f);
+}
+#shud-root .shud-party-member img,
+#shud-root .shud-actor-directory-row img {
+  width:42px;height:42px;flex:none;
+  border:2px solid #be965d;border-radius:50%;object-fit:cover;
+  box-shadow:0 0 0 2px #1e1119;
+}
+#shud-root .shud-party-copy b {font:600 12px Georgia,serif;color:#f4dfb8}
+#shud-root .shud-party-copy small {font-size:10px;color:#c5ae90}
+#shud-root .shud-hp-track {height:5px;border:1px solid #3d2b30;border-radius:3px;background:#3e202a}
+#shud-root .shud-hp-track > span {background:linear-gradient(90deg,#446443,#8fc789);box-shadow:none}
+#shud-root .shud-dock-rail {
+  border-color:#aa8655; border-radius:6px;
+  background:linear-gradient(90deg,#251828ef,#0e121bec);
+  box-shadow:0 0 0 1px #150c12,0 8px 16px #0009,inset 1px 0 #d1a36740;
+}
+#shud-root .shud-dock-toggle {
+  border-radius:3px 9px 3px 9px;border-color:#765640;
+  background:linear-gradient(#2e1d2a,#13151e);color:#e5c18a;
+}
+#shud-root .shud-dock-toggle:is(:hover,.is-open) {
+  border-color:#e2b87a;background:linear-gradient(#6d2939,#2b1621);
+}
+#shud-root .shud-dock-rail-text {color:#c5a273;letter-spacing:2px;opacity:.7}
+#shud-root .shud-right-dock > .shud-character {
+  border:1px solid #c69b61;
+  background:linear-gradient(165deg,#211624f6,#0e121af8 55%,#211322f4);
+}
+
+/* Hero becomes a framed circular portrait as in the chosen design instead of an
+   enormous panoramic banner. Uses the character's actual Foundry portrait. */
+#shud-root .shud-hero {
+  flex:0 0 auto;height:235px;
+  overflow:hidden;
+  background:radial-gradient(ellipse at 50% 17%,#4e2836 0%,#231521 37%,#0b1018 84%);
+  border-bottom:1px solid #b58954;
+}
+#shud-root .shud-hero::before {
+  content:""; position:absolute;z-index:0;pointer-events:none;
+  inset:12px 10px auto;height:26px;
+  background:url("../assets/gilded-flourish.svg") center/210px 27px no-repeat;
+  opacity:.73;
+}
+#shud-root .shud-hero-image {
+  position:absolute;left:50%;top:27px;transform:translateX(-50%);
+  height:128px;width:128px;border-radius:50%;
+  border:3px solid #d3a566;object-fit:cover;object-position:center 35%;
+  box-shadow:0 0 0 3px #351a21,0 0 0 5px #956b3f,0 4px 18px #000b;
+}
+#shud-root .shud-hero-overlay {
+  position:absolute;inset:0; display:flex;
+  justify-content:center;align-items:flex-end;
+  padding:0 12px 17px;
+  background:linear-gradient(0deg,#0d1019f7 0%,#0d101950 45%,transparent 78%);
+}
+#shud-root .shud-hero-title {justify-content:center;text-align:center;flex:1}
+#shud-root .shud-hero-title > img {display:none}
+#shud-root .shud-hero-title > div {max-width:100%;min-width:0}
+#shud-root .shud-hero-title h2 {
+  font:700 clamp(22px,1.75vw,26px)/1.08 Georgia,serif;
+  text-shadow:0 2px 5px #000;white-space:nowrap;
+}
+#shud-root .shud-hero-title small {display:block;margin-top:5px;color:#dbbb8d;font:11px Georgia,serif}
+#shud-root .shud-choose-character {position:absolute;right:9px;bottom:12px}
+#shud-root .shud-stats {
+  gap:7px;padding:10px 11px 9px;background:linear-gradient(#221726,#0b1018);
+  border-bottom:1px solid #856041;
+}
+#shud-root .shud-stats > div {
+  min-height:57px; padding:7px 2px;
+  border:1px solid #94683f; border-radius:2px 8px 2px 8px;
+  background:linear-gradient(#3b1e2b,#191620 80%);
+}
+#shud-root .shud-stats strong {font:700 13px Georgia,serif;color:#f8e2be}
+#shud-root .shud-stats small {font:10px Georgia,serif;color:#c6a57e}
+#shud-root .shud-tabbar {gap:3px;padding:8px 7px;background:#120f1b;border-bottom:1px solid #7a533a}
+#shud-root .shud-tabbar button {
+  min-height:45px;padding:6px 1px;gap:5px;
+  border:1px solid #7f5b40;border-radius:3px 7px 3px 7px;
+  background:linear-gradient(#2b2029,#10141d);
+  color:#edcb9b;font:10px Georgia,serif;
+}
+#shud-root .shud-tabbar button:is(.active,:hover) {
+  border-color:#e3ae6b;background:linear-gradient(#76273b,#361525);
+  color:#fff0ca;box-shadow:inset 0 1px #f5ca885a;
+}
+#shud-root .shud-content {padding:13px 11px;scrollbar-color:#80573a #14131b}
+#shud-root .shud-section-title {font:700 18px Georgia,serif;color:#f6dbaf}
+#shud-root .shud-action-entry,
+#shud-root .shud-spell-row {
+  border:1px solid #60433b;border-radius:5px;
+  background:linear-gradient(110deg,#301f2b80,#11151d 80%);
+  margin-bottom:6px;
+}
+#shud-root .shud-action-entry.is-expanded {
+  border-color:#cb9558;
+  background:linear-gradient(#502237,#1b1923 23%,#11151c);
+  box-shadow:inset 0 1px #edc88a65;
+}
+#shud-root .shud-entry-head {padding:8px 7px}
+#shud-root .shud-entry-head img {border-radius:4px;border-color:#bd9457}
+#shud-root .shud-entry-copy b {font:600 13px Georgia,serif}
+#shud-root .shud-entry-details {border-top:1px solid #946b45;background:#18141dbb}
+#shud-root .shud-entry-actions {gap:6px}
+#shud-root .shud-entry-actions .shud-roll-button,
+#shud-root .shud-wide-button {
+  border:1px solid #ba8a53;border-radius:3px 7px 3px 7px;
+  background:linear-gradient(#5c2033,#25141e);color:#f8d5aa;
+  box-shadow:inset 0 1px #edb97e40;
+}
+#shud-root .shud-entry-actions .shud-roll-button:hover,
+#shud-root .shud-wide-button:hover {
+  border-color:#f7c884;background:linear-gradient(#8e3144,#421b2a);
+}
+#shud-root .shud-no-character h2 {color:#f4d9af}
+
+/* Initiative is a compact row of framed portraits, not an additional window.
+   It is hidden automatically by existing JS when no battle / no space. */
+#shud-root .shud-initiative {filter:none;top:73px}
+#shud-root .shud-initiative-frame {
+  border:1px solid #b7874f;border-radius:10px;
+  background:linear-gradient(155deg,#211725eb,#0d111bf1);
+  box-shadow:0 0 0 2px #140b10,0 9px 19px #0009,inset 0 1px #f9d29650;
+}
+#shud-root .shud-initiative-heading {
+  height:29px;background:linear-gradient(90deg,#421c2b,#17141f 58%,#391b2b);
+  border-bottom-color:#a57b4b;
+}
+#shud-root .shud-initiative-title {font:700 14px Georgia,serif;color:#f1d6a8}
+#shud-root .shud-initiative-portrait {border-color:#af865a;box-shadow:0 3px 9px #000b}
+#shud-root .shud-initiative-combatant.is-current .shud-initiative-portrait {
+  border-color:#f6c87e;box-shadow:0 0 0 3px #632334,0 0 0 5px #c69d5b,0 4px 12px #000c;
+}
+#shud-root .shud-initiative-now {border-color:#e7bc7e;background:#702138;color:#fff3d3}
+#shud-root .shud-initiative-ini {border-color:#e2af6b;background:#321624;color:#ffdc9f}
+#shud-root .shud-initiative-name {font:10px Georgia,serif;color:#edd5ba}
+
+/* Keep the view usable on narrower screens instead of overlapping the canvas. */
+@media(max-width:1450px) {
+  #shud-root {--shud-left-chat-width:clamp(280px,22vw,315px)}
+  #shud-root .shud-right-dock {--shud-dock-character-width:clamp(300px,25vw,342px);--shud-dock-party-width:174px}
+  #shud-root .shud-menus button {padding:8px 7px;gap:5px;font-size:12px}
+  #shud-root .shud-top-right button {width:28px}
+}
+@media(max-width:1100px) {
+  #shud-root .shud-topbar {top:4px;height:49px}
+  #shud-root .shud-menus {padding:2px 3px;max-width:calc(100vw - 165px);overflow-x:auto;scrollbar-width:none}
+  #shud-root .shud-menus::after {display:none}
+  #shud-root .shud-menus button {padding:7px 6px;font-size:11px}
+  #shud-root .shud-right-dock {--shud-dock-character-width:300px;--shud-dock-party-width:160px}
+  #shud-root .shud-hero {height:215px}
+  #shud-root .shud-hero-image {width:112px;height:112px}
+}
+@media(max-width:720px) {
+  #shud-root .shud-top-right {padding:2px}
+  #shud-root .shud-top-right button {width:26px}
+  #shud-root .shud-menus button {font-size:10px;min-height:30px}
+  #shud-root .shud-menus button .shud-svg-icon {display:none}
+  #shud-root .shud-left-dock > .shud-chat::before {display:none}
+}
+@media(prefers-reduced-motion:reduce) {
+  #shud-root :is(.shud-initiative-portrait,.shud-menus button) {transition:none}
+}
+
+/* Read-only six-ability overview, using existing actor.system.abilities. */
+#shud-root .shud-ability-grid {
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;
+  padding:8px 10px 11px;border-bottom:1px solid #855c3c;
+  background:linear-gradient(180deg,#1b1420,#11121b);
+}
+#shud-root .shud-ability-tile {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:0;min-height:52px;gap:2px;
+  border:1px solid #86603f;border-radius:3px 7px 3px 7px;
+  background:linear-gradient(#311e2a,#14141e);
+  color:#e6cfab;
+}
+#shud-root .shud-ability-tile b {font:700 9px Georgia,serif;color:#eec78b}
+#shud-root .shud-ability-tile strong {font:700 16px Georgia,serif;color:#fff0d3}
+#shud-root .shud-ability-tile small {font:10px Georgia,serif;color:#bba387}

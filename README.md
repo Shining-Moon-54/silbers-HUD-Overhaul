@@ -1,3 +1,11 @@
+## Version 0.4.6 – Immersive Dark Fantasy
+
+Neue **tatsächliche HUD-Gestaltung** nach dem freigegebenen Bildkonzept (keine eingebettete Bildgenerierung): schwebende, kompakte Navigations- und Systemmenüs, schmalere anliegende Chat- und rechte Docks, feinere vergoldete Rahmen, kreisförmiges Charakterportrait und eine kompakte Übersicht der sechs D&D-5e-Attribute. Die Initiative- und Aktionskarten wurden optisch angeglichen.
+
+**Keine neue Runtime-Schleife:** Die Gestaltung nutzt CSS und die bereits vorhandenen kleinen SVG-Verzierungen; die Attributwerte stammen aus dem ohnehin geladenen Actor-Dokument. Alle bisherigen Funktionen bleiben bestehen. Die aktuelle Szene bestimmt weiterhin den Kartenhintergrund. Die UI wurde in einer isolierten Browser-Nachbildung geprüft; der Live-Test in Foundry v14 steht noch aus.
+
+---
+
 ## Installation & automatische Updates über GitHub Releases
 
 **Foundry VTT v14** · Modul-ID `silber-hud-overhaul`

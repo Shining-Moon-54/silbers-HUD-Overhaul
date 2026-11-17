@@ -1,8 +1,8 @@
 {
   "id": "silber-hud-overhaul",
   "title": "Silber HUD Overhaul",
-  "description": "Dark-Fantasy-Design mit ornamentalen Gold-/Rot-Akzenten; bestehendes Spiel-HUD, Dice Tray, Initiative, direkte Aktionen und GM-Undo ohne zusätzliche Laufzeit-Hooks.",
-  "version": "0.4.5",
+  "description": "Immersive Dark-Fantasy-Spieloberfläche: schwebende Menüinseln, Goldrahmen, runde Charakterporträts, sechs Attribute, Chat/Dice Tray, Initiative und GM-Undo.",
+  "version": "0.4.6",
   "authors": [
     {
       "name": "Silber HUD Projekt"
@@ -17,7 +17,8 @@
   ],
   "styles": [
     "styles/hud.css",
-    "styles/theme-fantasy.css"
+    "styles/theme-fantasy.css",
+    "styles/theme-immersive.css"
   ],
   "languages": [
     {

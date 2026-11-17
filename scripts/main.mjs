@@ -880,9 +880,22 @@ function refreshCharacter() {
   if (!hasAccess(actor)) { host.innerHTML = `<div class="shud-empty">Kein Zugriff.</div>`; return; }
   const stats = hpStats(actor);
   const tp = escapeHtml(stats.current) + " / " + escapeHtml(stats.max);
+  // Show the existing D&D 5e ability values in a compact, read-only grid.
+  // No actor queries or extra hooks: this is generated only with the character panel.
+  const abilityLabels = {str:"STR", dex:"GES", con:"KON", int:"INT", wis:"WEI", cha:"CHA"};
+  const abilities = actor.system?.abilities ?? {};
+  const abilityGrid = Object.entries(abilityLabels).some(([key]) => abilities[key]?.value !== undefined)
+    ? `<div class="shud-ability-grid" aria-label="Attribute">${Object.entries(abilityLabels).map(([key,label]) => {
+        const value = abilities[key]?.value ?? "–";
+        const mod = abilities[key]?.mod;
+        const modText = Number.isFinite(mod) ? (mod >= 0 ? `+${mod}` : String(mod)) : "";
+        return `<div class="shud-ability-tile"><b>${label}</b><strong>${escapeHtml(value)}</strong><small>${escapeHtml(modText)}</small></div>`;
+      }).join("")}</div>`
+    : "";
   host.innerHTML = `
     <div class="shud-hero"><img src="${img(actor.img)}" alt="" class="shud-hero-image"><div class="shud-hero-overlay"><div class="shud-hero-title"><img src="${img(actor.img)}" alt=""><div><h2>${escapeHtml(actor.name)}</h2><small>${escapeHtml(actorLabel(actor))}</small></div></div>${game.user.isGM ? `<button class="shud-choose-character" data-menu="characters" title="Figur auswählen oder abwählen">${icon("users")}</button>` : ""}</div></div>
     <div class="shud-stats"><div><strong>${icon("heart")} ${tp}</strong><small>Trefferpunkte</small></div><div><strong>${icon("shield")} ${escapeHtml(stats.ac)}</strong><small>Rüstungsklasse</small></div><div><strong>${icon("shoe-prints")} ${escapeHtml(stats.movement)}</strong><small>Bewegung</small></div></div>
+    ${abilityGrid}
     <div class="shud-tabbar" role="tablist">
       <button role="tab" data-tab="actions" class="${state.tab === "actions" ? "active" : ""}">${icon("bolt")}<span>Aktionen</span></button>
       <button role="tab" data-tab="spells" class="${state.tab === "spells" ? "active" : ""}">${icon("wand-magic-sparkles")}<span>Zauber</span></button>
