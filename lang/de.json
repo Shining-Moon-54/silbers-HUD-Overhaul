@@ -1,0 +1,13 @@
+{
+  "SHUD": {
+    "Title": "Silber HUD Overhaul",
+    "Enabled": "HUD aktivieren",
+    "EnabledHint": "Ersetzt die Standardplatzierung durch das neue HUD. Nach Änderungen bitte Foundry neu laden.",
+    "Chat": "Chat",
+    "Party": "Gruppe",
+    "Character": "Charakter",
+    "Cast": "Wirken",
+    "Attack": "Angriff",
+    "Damage": "Schaden"
+  }
+}

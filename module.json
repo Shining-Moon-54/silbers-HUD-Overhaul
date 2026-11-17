@@ -1,0 +1,32 @@
+{
+  "id": "silber-hud-overhaul",
+  "title": "Silber HUD Overhaul",
+  "description": "Dark-Fantasy-Design mit ornamentalen Gold-/Rot-Akzenten; bestehendes Spiel-HUD, Dice Tray, Initiative, direkte Aktionen und GM-Undo ohne zusätzliche Laufzeit-Hooks.",
+  "version": "0.4.5",
+  "authors": [
+    {
+      "name": "Silber HUD Projekt"
+    }
+  ],
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "esmodules": [
+    "scripts/main.mjs"
+  ],
+  "styles": [
+    "styles/hud.css",
+    "styles/theme-fantasy.css"
+  ],
+  "languages": [
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "lang/de.json"
+    }
+  ],
+  "url": "https://github.com/Shining-Moon-54/silbers-HUD-Overhaul",
+  "license": "MIT",
+  "socket": true
+}

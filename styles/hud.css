@@ -1,0 +1,861 @@
+/* Silber HUD - isolated under .shud-active and #shud-root, all panels client-side only. */
+body.shud-active { --shud-red:#b71c28; --shud-gold:#bc8851; --shud-ink:#090e15; --shud-text:#f3e8dc; }
+body.shud-active #navigation,body.shud-active #players,body.shud-active #hotbar { display:none!important; }
+body.shud-active:not(.shud-vanilla-sidebar) #sidebar { display:none!important; }
+body.shud-active.shud-vanilla-sidebar #sidebar { z-index:106!important; }
+/* Keep native map controls, merely restyle. Hide the light bulb and clapperboard tools requested in the mockup. */
+body.shud-active #controls { z-index:65!important; top:91px!important; left:14px!important; }
+body.shud-active #controls button,body.shud-active #controls .control,body.shud-active #controls .control-tool { color:#e8d5be; background:linear-gradient(140deg,#171b24,#090b0f); border:1px solid #6d452e; border-radius:9px; box-shadow:0 2px 9px #0009; }
+body.shud-active #controls .active { color:white; border-color:#d92937; background:linear-gradient(125deg,#63131b,#1c0d15); }
+#shud-root { position:fixed; inset:0; z-index:60; pointer-events:none; font-family: "Signika", "Roboto", system-ui, sans-serif; color:var(--shud-text); font-size:14px; }
+#shud-root * { box-sizing:border-box; }
+#shud-root button { font:inherit; color:inherit; cursor:pointer; }
+#shud-root button:focus-visible,#shud-root input:focus-visible { outline:2px solid #e0a467; outline-offset:2px; }
+#shud-root button:disabled { opacity:.35; cursor:default; }
+#shud-root [hidden] { display:none!important; }
+#shud-root .shud-topbar { pointer-events:auto; position:absolute; top:9px; left:14px; right:12px; height:62px; display:flex; align-items:center; gap:14px; padding:0 16px 0 0; background:linear-gradient(90deg,#080d16ee 0%,#151921ea 65%,#080c13ed 100%); border:1px solid #75432a; border-radius:22px; box-shadow:0 8px 28px #000b,inset 0 1px #d7a66655; }
+#shud-root .shud-sigil { width:63px; height:63px; flex:none; margin-left:-1px; display:grid; place-items:center; border-radius:50%; color:#fa545b; font-size:30px; border:2px solid #b3653a; text-shadow:0 0 18px #d11426; background:radial-gradient(circle,#4b131c,#101119 65%); box-shadow:0 0 0 5px #171015,0 0 13px #df4f3440; }
+#shud-root .shud-menus { display:flex; gap:4px; flex:1; min-width:0; }
+#shud-root .shud-menus button { border:1px solid transparent; border-radius:9px; background:transparent; padding:12px 12px; display:flex; align-items:center; gap:9px; white-space:nowrap; font-weight:600; }
+#shud-root .shud-menus button:hover,#shud-root .shud-menus button.is-active { background:linear-gradient(#601c24,#210e16); border-color:#b54a38; box-shadow:inset 0 0 12px #cc28262a; }
+#shud-root .shud-menus button .fa-chevron-down { font-size:9px; color:#cf895f; margin-left:1px; }
+#shud-root .shud-top-right { display:flex; gap:5px; }
+#shud-root .shud-top-right button { border:0; background:transparent; color:#e1d0b8; font-size:19px; width:35px; height:36px; border-radius:9px; }
+#shud-root .shud-top-right button:hover { background:#7f2027; }
+#shud-root .shud-menu-popup { pointer-events:auto; position:absolute; top:78px; left:92px; width:min(400px,calc(100vw - 105px)); max-height:min(60vh,550px); overflow:auto; border:1px solid #b97442; border-radius:13px; background:linear-gradient(135deg,#171b26fa,#090e17fa); box-shadow:0 22px 45px #000d; padding:14px; }
+#shud-root .shud-menu-popup h3 { font:bold 19px Georgia,serif; margin:0 0 10px; padding-bottom:8px; border-bottom:1px solid #6d342e; }
+#shud-root .shud-menu-list { display:flex; flex-direction:column; gap:4px; }
+#shud-root .shud-dropdown-row { display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:9px 11px; border:1px solid transparent; background:#24232a99; border-radius:8px; }
+#shud-root .shud-dropdown-row:hover { background:#62202a; border-color:#a74c39; }
+#shud-root .shud-dropdown-footer { margin-top:8px; color:#f2bb8a; border-color:#795340; }
+#shud-root .shud-menu-note { font-size:11px; color:#c2b2a4; margin:8px 0 0; }
+#shud-root .shud-panel { pointer-events:auto; position:absolute; display:flex; flex-direction:column; border:1px solid #a46a38; border-radius:15px; background:linear-gradient(165deg,#111721f8,#090c13fb 83%); box-shadow:0 12px 36px #000c,0 0 0 3px #1a0a0c,inset 0 1px #d69b5d77; min-width:0; overflow:hidden; transition:width .18s ease,height .18s ease; }
+#shud-root .shud-panel-header { flex:none; display:flex; justify-content:space-between; align-items:center; padding:8px 12px; min-height:43px; background:linear-gradient(90deg,#46131a,#17121b); border-bottom:1px solid #76362c; }
+#shud-root .shud-panel-header strong { display:flex; gap:8px; align-items:center; font-family:Georgia,serif; font-size:15px; }
+#shud-root .shud-panel-header button { width:25px; height:26px; border:1px solid #774a36; background:#1a1317; border-radius:6px; }
+#shud-root .shud-panel-header button:hover { background:#84202b; }
+#shud-root .shud-panel-body { display:flex; flex-direction:column; flex:1; min-height:0; overflow:auto; }
+#shud-root .shud-chat { left:78px; bottom:28px; width:390px; height:min(43vh,420px); }
+#shud-root .shud-chat #shud-chat-mount { flex:1; min-height:0; overflow:hidden; }
+#shud-root .shud-chat #shud-chat-fallback { padding:14px; }
+#shud-root .shud-party { right:min(430px,calc(25vw + 14px)); top:109px; width:216px; max-height:min(53vh,500px); }
+#shud-root .shud-party .shud-panel-body { padding:7px; gap:5px; }
+#shud-root .shud-character { top:52px; right:14px; width:390px; height:calc(100vh - 68px); }
+#shud-root .shud-character .shud-panel-header { display:none; }
+#shud-root .shud-character .shud-panel-body { overflow:hidden; }
+/* The character panel gets a discreet visible collapsing button on hover and a title tab when collapsed. */
+#shud-root .shud-character::before { content:""; pointer-events:none; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,transparent,#d54b3a,transparent); z-index:3; }
+#shud-root .shud-character:not(.is-collapsed) .shud-panel-header { display:flex; position:absolute; z-index:5; top:8px; right:7px; width:auto; min-height:0; padding:3px; background:#0b1018dd; border:0; border-radius:9px; }
+#shud-root .shud-character:not(.is-collapsed) .shud-panel-header strong { display:none; }
+#shud-root .shud-panel.is-collapsed { height:43px; width:49px; overflow:visible; }
+#shud-root .shud-panel.is-collapsed .shud-panel-header { display:flex; padding:7px; border-radius:14px; height:43px; }
+#shud-root .shud-panel.is-collapsed .shud-panel-header strong span,#shud-root .shud-panel.is-collapsed .shud-panel-header strong { display:none; }
+#shud-root .shud-panel.is-collapsed .shud-panel-body { display:none!important; }
+#shud-root .shud-panel.is-collapsed .shud-panel-header button { width:33px; height:29px; }
+#shud-root .shud-party.is-collapsed { right:min(430px,calc(25vw + 14px)); }
+#shud-root .shud-character.is-collapsed { right:15px; top:75px; }
+#shud-root .shud-chat.is-collapsed { left:78px; bottom:28px; }
+#shud-root .shud-party-member { display:flex; gap:8px; background:#171b23; width:100%; padding:6px; border:1px solid #363844; border-radius:10px; text-align:left; min-height:59px; }
+#shud-root .shud-party-member.is-current { border-color:#a73335; background:linear-gradient(110deg,#421c24,#141722); }
+#shud-root .shud-party-member:hover { border-color:#dc8d53; }
+#shud-root .shud-party-member img { width:46px; height:46px; border:1px solid #cf9360; border-radius:50%; object-fit:cover; }
+#shud-root .shud-party-copy { flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:3px; }
+#shud-root .shud-party-copy b { font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#shud-root .shud-party-copy small { font-size:10px; color:#cabbad; }
+#shud-root .shud-hp-track { display:block; width:100%; height:6px; border-radius:9px; background:#4e1620; overflow:hidden; }
+#shud-root .shud-hp-track > span { display:block; height:100%; background:linear-gradient(90deg,#398745,#83ec70); box-shadow:0 0 7px #4fce68; }
+#shud-root .shud-hero { position:relative; height:188px; flex:none; overflow:hidden; background:#1e2630; }
+#shud-root .shud-hero-image { height:100%; width:100%; object-fit:cover; object-position:center 35%; }
+#shud-root .shud-hero-overlay { position:absolute; inset:0; background:linear-gradient(0deg,#090e17 0%,transparent 85%); display:flex; align-items:end; padding:12px; }
+#shud-root .shud-hero-title { display:flex; align-items:center; gap:11px; min-width:0; }
+#shud-root .shud-hero-title img { width:54px; height:54px; border:2px solid #b36b45; border-radius:50%; object-fit:cover; }
+#shud-root .shud-hero-title h2 { font:bold 24px Georgia,serif; margin:0; text-shadow:0 2px 5px black; }
+#shud-root .shud-hero-title small { font-size:11px; color:#d9b3a2; }
+#shud-root .shud-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; padding:9px; }
+#shud-root .shud-stats > div { display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid #5e3430; border-radius:9px; background:#191820; padding:9px 2px; }
+#shud-root .shud-stats strong { font-size:14px; white-space:nowrap; }
+#shud-root .shud-stats div:first-child i { color:#ef5f65; }
+#shud-root .shud-stats div:nth-child(2) i { color:#6bbfe6; }
+#shud-root .shud-stats div:nth-child(3) i { color:#f4c69a; }
+#shud-root .shud-stats small { color:#c8b8a6; font-size:10px; margin-top:5px; }
+#shud-root .shud-tabbar { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); padding:0 8px; gap:3px; border-bottom:1px solid #6d3030; }
+#shud-root .shud-tabbar button { padding:8px 0; display:flex; flex-direction:column; align-items:center; gap:5px; font-size:10px; border-radius:6px 6px 0 0; background:#171b24; border:1px solid #483a37; border-bottom:0; min-width:0; }
+#shud-root .shud-tabbar button i { font-size:14px; }
+#shud-root .shud-tabbar button.active { background:linear-gradient(#8d222e,#300c15); border-color:#d64a3f; box-shadow:inset 0 0 9px #da463c55; }
+#shud-root .shud-content { overflow:auto; flex:1; min-height:0; padding:12px; }
+#shud-root .shud-section-title { display:flex; justify-content:space-between; font:bold 17px Georgia,serif; margin-bottom:10px; }
+#shud-root .shud-section-title small { color:#b7a493; font:12px system-ui,sans-serif; }
+#shud-root .shud-search { display:flex; gap:9px; align-items:center; padding:9px 10px; border:1px solid #68504b; border-radius:9px; background:#151821; margin-bottom:10px; }
+#shud-root .shud-search input { width:100%; border:0; background:transparent; color:#f5e6d8; outline:none; font:13px system-ui,sans-serif; }
+#shud-root .shud-search input::placeholder { color:#a5a3a7; }
+#shud-root .shud-spell-group { margin:7px 0; border:1px solid #52262a; border-radius:9px; overflow:hidden; background:#10131a; }
+#shud-root .shud-spell-group summary { cursor:pointer; padding:9px; font:600 13px Georgia,serif; background:linear-gradient(90deg,#67212a,#290f17); }
+#shud-root .shud-spell-group summary span { opacity:.8; }
+#shud-root .shud-slot-count { float:right; font:11px system-ui,sans-serif; color:#ead4bc; }
+#shud-root .shud-spell-row { padding:8px; border-top:1px solid #413034; }
+#shud-root .shud-spell-head { width:100%; display:flex; align-items:center; gap:8px; text-align:left; border:0; background:none; padding:0; }
+#shud-root .shud-spell-head img { width:35px; height:35px; border:1px solid #774f3a; border-radius:6px; object-fit:cover; }
+#shud-root .shud-spell-head span { flex:1; min-width:0; }
+#shud-root .shud-spell-head b { font:600 13px system-ui,sans-serif; display:block; }
+#shud-root .shud-spell-head small { display:block; color:#bba99a; font-size:10px; margin-top:2px; }
+#shud-root .shud-spell-head > i { color:#ba9175; font-size:10px; }
+#shud-root .shud-spell-buttons { display:flex; gap:5px; padding-top:7px; }
+#shud-root .shud-roll-button { border:1px solid #9e4937; border-radius:6px; background:linear-gradient(#491923,#230f18); padding:6px 8px; font-size:11px; }
+#shud-root .shud-roll-button:hover { border-color:#e7ac65; background:#8a2631; }
+#shud-root .shud-roll-button:first-child { border-color:#bd8b50; }
+#shud-root .shud-hint { font-size:10px; color:#b1a6a0; line-height:1.5; padding:10px 2px; }
+#shud-root .shud-item { display:flex; gap:7px; align-items:center; background:#181b23; border:1px solid #423035; border-radius:8px; padding:7px; margin-bottom:6px; }
+#shud-root .shud-item img { width:35px; height:35px; object-fit:cover; border-radius:5px; }
+#shud-root .shud-item > div { flex:1; min-width:0; }
+#shud-root .shud-item b { display:block; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#shud-root .shud-item small { color:#c5ae9b; font-size:10px; }
+#shud-root .shud-mini { border:1px solid #6b4540; background:#24212a; border-radius:6px; width:29px; height:29px; }
+#shud-root .shud-mini.shud-accent { border-color:#9e5339; background:#59202b; }
+#shud-root .shud-empty { padding:12px; color:#c1ad9e; font-size:12px; }
+#shud-root .shud-wide-button { width:100%; border:1px solid #ac5d3a; background:#4d2028; border-radius:8px; padding:11px; }
+#shud-root .shud-description { font-size:12px; color:#cbb4a4; }
+/* Native popout is a single movable view, not a duplicate or a reimplemented chat card renderer. */
+#shud-root #shud-chat-mount > .shud-embedded-chat { position:relative!important; top:auto!important; right:auto!important; left:auto!important; bottom:auto!important; height:100%!important; width:100%!important; min-width:0!important; min-height:0!important; max-height:none!important; max-width:none!important; border:0!important; box-shadow:none!important; transform:none!important; background:transparent!important; }
+#shud-root .shud-embedded-chat .window-header { display:none!important; }
+#shud-root .shud-embedded-chat .window-content { height:100%; min-height:0; background:transparent!important; padding:3px!important; }
+#shud-root .shud-embedded-chat .chat-scroll { min-height:0; }
+#shud-root .shud-embedded-chat .chat-message { background:#19202ce8; border:1px solid #554039; color:#f0e4d8; border-radius:8px; margin:5px 1px; }
+#shud-root .shud-embedded-chat .chat-message .message-header { color:#e7c3b3; }
+#shud-root .shud-embedded-chat #chat-form { padding:6px; }
+#shud-root .shud-embedded-chat textarea { background:#141922; color:#f2e8dc; border:1px solid #873a3d; }
+@media (max-width:1200px) {
+  #shud-root .shud-party { right:354px; width:194px; }
+  #shud-root .shud-character { width:335px; }
+  #shud-root .shud-chat { width:340px; }
+  #shud-root .shud-menus button { padding:10px 7px; gap:5px; }
+}
+@media (max-width:860px) {
+  #shud-root .shud-topbar { left:6px; right:6px; height:51px; gap:4px; padding-right:5px; }
+  #shud-root .shud-sigil { width:43px; height:43px; font-size:21px; }
+  #shud-root .shud-menus button { padding:7px; }
+  #shud-root .shud-menus button span { display:none; }
+  #shud-root .shud-menus button .fa-chevron-down { display:none; }
+  #shud-root .shud-top-right button { width:26px; }
+  #shud-root .shud-party { right:calc(min(310px,44vw) + 10px); top:72px; width:150px; }
+  #shud-root .shud-character { width:min(310px,44vw); top:72px; height:calc(100vh - 85px); right:7px; }
+  #shud-root .shud-chat { left:8px; bottom:10px; width:min(330px,43vw); }
+  #shud-root .shud-menu-popup { top:66px; left:8px; }
+  body.shud-active #controls { top:72px!important; }
+}
+@media (prefers-reduced-motion:reduce) { #shud-root .shud-panel { transition:none; } }
+
+/* 0.2 Play-first: secondary preparation tools are tucked into the GM dropdown. */
+#shud-root .shud-combat-pill { max-width:170px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#f1d3b2; font-size:11px; font-weight:600; padding:5px 7px; border-radius:7px; border:1px solid #7f4238; background:#32121b; }
+#shud-root .shud-combat-pill[hidden] { display:none!important; }
+#shud-root .shud-combat-round { margin:0 0 8px; font-size:12px; color:#f4bd7f; }
+#shud-root .shud-combat-row { gap:8px; min-height:44px; }
+#shud-root .shud-combat-row img { width:34px; height:34px; border-radius:50%; border:1px solid #a56c42; object-fit:cover; }
+#shud-root .shud-combat-name { flex:1; font-size:12px; }
+#shud-root .shud-combat-name i { color:#f5c17e; }
+#shud-root .shud-initiative { font-weight:700; color:#ead6b3; }
+#shud-root .shud-current-turn { background:linear-gradient(120deg,#7a2634,#261820); border-color:#bf764c; }
+#shud-root .shud-dice-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; margin:12px 0; }
+#shud-root .shud-dice-grid button { padding:10px 3px; border:1px solid #885443; border-radius:8px; background:#271923; font-weight:700; }
+#shud-root .shud-dice-grid button:hover { background:#652632; border-color:#e2a968; }
+@media(max-width:1100px) { #shud-root .shud-combat-pill { display:none; } }
+/* 0.3 Play UI: only the Foundry canvas and our overlay remain permanently visible.
+   SceneControls is accessed through the official ui.controls.activate() API above. */
+body.shud-active #controls {display:none!important}
+body.shud-active.shud-show-native-controls #controls {display:block!important;z-index:90!important}
+body.shud-active #navigation, body.shud-active #players, body.shud-active #hotbar {display:none!important}
+#shud-root {--shud-glow:#db423c; --shud-bronze:#c28c59; --shud-gold:#e0a96b;}
+#shud-root button {letter-spacing:0;transition:background .13s,border-color .13s,transform .13s}
+#shud-root .shud-topbar {
+  top:10px;left:16px;right:clamp(365px,25vw,435px);height:55px;gap:10px;padding:0 10px 0 0;
+  background:linear-gradient(95deg,#090c16f7,#131a26f3 63%,#080b12f3);
+  border:1px solid #8a482e;border-radius:7px 18px 12px 18px;
+  box-shadow:0 0 0 2px #110e13,0 9px 25px #000b,inset 0 2px #cda16a66;
+}
+#shud-root .shud-topbar::after {
+ content:"";position:absolute;bottom:-4px;left:61px;right:20px;height:2px;
+ background:linear-gradient(90deg,#e02e35 0%,#d49a4e 45%,transparent 94%);pointer-events:none;
+}
+#shud-root .shud-sigil {
+ width:61px;height:61px;margin:0 6px 0 -12px;position:relative;z-index:1;
+ border:3px double #cf934c;box-shadow:0 0 0 4px #1a0d13,0 0 0 5px #ad6037,0 5px 14px #000b;
+ background:radial-gradient(circle at 48% 38%,#63111c,#220e1a 57%,#070a10 76%);color:#ef4a50;
+}
+#shud-root .shud-menus {gap:3px;align-items:center}
+#shud-root .shud-menus button {
+ min-height:38px;padding:7px 12px;border:1px solid #70442e;background:linear-gradient(160deg,#25202a,#10141d);
+ box-shadow:inset 0 1px #b3904c28; border-radius:5px 9px 7px 9px;font-size:12px;
+}
+#shud-root .shud-menus button:hover,#shud-root .shud-menus button.is-active {
+ border-color:#d24b3b;background:linear-gradient(#64212b,#220e16);box-shadow:inset 0 0 8px #b9202b77,0 0 8px #a72b2055;
+}
+#shud-root .shud-top-right {gap:0;margin-left:auto;align-items:center}
+#shud-root .shud-top-right button {font-size:15px;width:29px;height:32px}
+#shud-root .shud-menu-popup {
+ top:69px;left:84px;width:min(370px,calc(100vw - 115px));padding:13px;
+ border:1px solid #d08c4e;border-radius:6px 12px 13px 13px;
+ box-shadow:0 8px 0 #070b1399,0 15px 38px #000e,inset 0 1px #efb57777;
+ background:linear-gradient(145deg,#181b29f9,#070b13fa);
+}
+/* A small real SceneControls palette replaces the unstyled v14 grey checkerboard. */
+#shud-root .shud-toolrail {
+ position:absolute;left:15px;top:83px;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:4px;
+ padding:7px 5px;border:1px solid #a76b3c;border-radius:13px 13px 16px 16px;
+ background:linear-gradient(#171a26f7,#090e16f7);box-shadow:0 0 0 2px #150c12,0 9px 27px #000b;
+ max-height:calc(100vh - 130px);overflow-y:auto;scrollbar-width:none;
+}
+#shud-root .shud-toolrail button {
+ flex:0 0 auto;display:grid;place-items:center;width:40px;height:41px;padding:0;border:1px solid #59362a;
+ border-radius:8px;color:#e4ccaa;background:linear-gradient(140deg,#20212a,#0c121b);font-size:17px;
+}
+#shud-root .shud-toolrail button:hover,#shud-root .shud-toolrail button.is-active {
+ border-color:#e34741;background:linear-gradient(150deg,#79202c,#260d19);box-shadow:0 0 9px #e53b3a50;
+}
+#shud-root .shud-toolpalette {
+ position:absolute;left:72px;top:87px;pointer-events:auto;max-width:230px;display:flex;flex-wrap:wrap;gap:5px;
+ padding:9px;border:1px solid #ad6739;border-radius:8px;background:#10141ef3;box-shadow:0 8px 23px #000b;
+}
+#shud-root .shud-toolpalette-title {flex-basis:100%;font:bold 12px Georgia,serif;color:#dfae76;margin:0 0 4px}
+#shud-root .shud-toolpalette button {width:36px;height:35px;padding:0;background:#1e1b23;border:1px solid #6c3b2a;border-radius:6px}
+#shud-root .shud-toolpalette button.is-active {background:#75232c;border-color:#e2854c}
+/* Original concept: party panel sits just left of the character frame. */
+#shud-root .shud-panel {
+ border:1px solid #b87640;border-radius:10px 13px 13px 10px;
+ background:linear-gradient(165deg,#111520f8,#090c13fa 83%);
+ box-shadow:0 12px 38px #000e,0 0 0 3px #130b0f,inset 0 1px #dea26c85;
+}
+#shud-root .shud-panel-header {
+ min-height:39px;padding:7px 11px;background:linear-gradient(90deg,#5d1720,#270f1b 70%,#140f18);
+ border-bottom:1px solid #c16d46;
+}
+#shud-root .shud-party {right:calc(clamp(338px,25vw,400px) + 30px);top:101px;width:216px;max-height:min(53vh,515px)}
+#shud-root .shud-party .shud-panel-body {gap:4px;padding:7px}
+#shud-root .shud-party-member {padding:5px;border-radius:7px;min-height:54px;background:#111722a8}
+#shud-root .shud-party-member img {width:40px;height:40px;border:2px solid #a35a42}
+#shud-root .shud-character {top:49px;right:13px;width:clamp(338px,25vw,400px);height:calc(100vh - 63px)}
+#shud-root .shud-character .shud-panel-body {overflow:hidden}
+#shud-root .shud-hero {height:clamp(150px,22vh,238px);background:radial-gradient(circle at 60% 25%,#443640,#151522)}
+#shud-root .shud-hero-overlay {padding:11px 13px;background:linear-gradient(0deg,#0a0e15 0%,#0a0e1578 40%,transparent 76%);gap:8px}
+#shud-root .shud-hero-title {min-width:0;flex:1}
+#shud-root .shud-hero-title h2 {font:700 clamp(21px,1.9vw,27px) Georgia,serif;line-height:1.08;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#shud-root .shud-choose-character {align-self:end;width:27px;height:27px;padding:0;background:#4b1720c9;border:1px solid #b77d47;border-radius:7px}
+#shud-root .shud-stats {padding:10px 10px 9px;gap:6px;background:#141821}
+#shud-root .shud-stats > div {min-height:63px;border:1px solid #603f36;background:linear-gradient(#25212a,#151820)}
+#shud-root .shud-stats strong {font-size:15px}
+#shud-root .shud-tabbar {background:#0d131c;padding:0 7px 7px;border-bottom:0}
+#shud-root .shud-tabbar button {border:1px solid #72503d;border-radius:5px;font-size:10px;min-height:49px;background:#1d1c25}
+#shud-root .shud-tabbar button.active {background:linear-gradient(#882530,#370f1b);border-color:#e75947;box-shadow:0 0 9px #aa24363d}
+#shud-root .shud-content {scrollbar-width:thin;scrollbar-color:#864d3b #161821;padding:11px}
+#shud-root .shud-section-title {font-size:18px}
+#shud-root .shud-search {padding:7px 9px}
+#shud-root .shud-spell-group {border-radius:6px;background:#10141c}
+#shud-root .shud-spell-group summary {background:linear-gradient(90deg,#79252c,#2c111a);font:600 13px Georgia,serif;padding:8px 9px}
+#shud-root .shud-spell-row {padding:7px 8px;background:#131923;border-top:1px solid #49303b}
+#shud-root .shud-spell-row:hover {background:#22212b}
+#shud-root .shud-spell-head img {width:38px;height:38px}
+#shud-root .shud-spell-buttons {padding:6px 0 0 46px;gap:6px}
+#shud-root .shud-roll-button {flex:1;white-space:nowrap;padding:5px 6px;background:linear-gradient(#542029,#280f1a);font-size:11px}
+#shud-root .shud-no-character {margin:auto;text-align:center;padding:20px;color:#dfc1a2}
+#shud-root .shud-no-character h2 {font:700 23px Georgia,serif;margin:10px 0}
+#shud-root .shud-no-character p {font-size:12px;line-height:1.5}
+#shud-root .shud-nochar-symbol {font-size:40px;color:#b35f4f}
+#shud-root .shud-no-character button {padding:8px 12px;background:#542029;border:1px solid #b97345;border-radius:8px}
+#shud-root .shud-menu-portrait {width:30px;height:30px;object-fit:cover;border-radius:50%;border:1px solid #ae7147}
+/* Chat is a game log; input is a temporary overlay. The native Foundry composer is
+   intentionally hidden but the native log & interactive D&D cards remain live. */
+#shud-root .shud-chat {left:80px;bottom:18px;width:clamp(345px,25vw,425px);height:min(42vh,430px);min-height:255px}
+#shud-root .shud-chat .shud-panel-body {overflow:hidden}
+#shud-root .shud-chat #shud-chat-mount {overflow:hidden;min-height:0}
+#shud-root .shud-embedded-chat :is(#chat-form,form.chat-form,.chat-form,.chat-input,[data-application-part="input"],[data-part="input"],section.chat-input,.chat-controls) {display:none!important}
+#shud-root .shud-embedded-chat :is(.chat-log,#chat-log,.chat-scroll,.chat-log-messages,[data-part="log"]) {overflow-y:auto;scrollbar-width:thin;scrollbar-color:#954d37 transparent;max-height:100%;padding:3px!important}
+#shud-root .shud-embedded-chat :is(.chat-message,li.chat-message) {
+ border:1px solid #3c3c48!important;border-radius:7px!important;padding:7px!important;margin:5px 2px!important;
+ background:linear-gradient(135deg,#18212df2,#121720f5)!important;color:#f2e7db!important;
+ box-shadow:inset 0 1px #8c584131;
+}
+#shud-root .shud-embedded-chat :is(.message-header,.message-content,.message-sender,.message-metadata) {color:inherit}
+#shud-root .shud-embedded-chat .message-header {font-size:11px;color:#d9bdab!important}
+#shud-root .shud-embedded-chat .message-content {font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+#shud-root .shud-embedded-chat .message-content :is(.dice-roll,.dice-tooltip,.dice-formula) {max-width:100%;}
+#shud-root .shud-embedded-chat .message-content .dice-total {background:#22252b;color:#fff;border:1px solid #8e5340;border-radius:5px}
+#shud-root .shud-embedded-chat :is(.dice-tray,.dice-tray-container,[id^="dice-tray"],.dice-tray__container) {display:none!important}
+#shud-root .shud-chat-bottom {flex:none;background:linear-gradient(#131923,#080e17);border-top:1px solid #8b472f;padding:6px 9px 8px}
+#shud-root .shud-chat-tray {display:flex;align-items:center;gap:3px;min-height:28px}
+#shud-root .shud-chat-tray button {
+ flex:1;min-width:0;height:28px;padding:2px 1px;font:bold 10px system-ui,sans-serif;
+ color:#e6d4c0;background:#1d222c;border:1px solid #79503a;border-radius:5px;
+}
+#shud-root .shud-chat-tray button:hover {background:#72232c;border-color:#e0a060}
+#shud-root .shud-tray-gap {width:4px;flex:none}
+#shud-root #shud-modifier {min-width:22px;font:600 11px system-ui,sans-serif;text-align:center;color:#f3c695}
+#shud-root .shud-compose-hint {display:flex;justify-content:center;gap:7px;align-items:center;height:24px;color:#b6a39c;font-size:10px;opacity:.9}
+#shud-root .shud-compose-hint kbd {display:inline-block;font:bold 9px system-ui,sans-serif;border:1px solid #69483e;border-radius:4px;padding:1px 4px;color:#d3ac86}
+#shud-root .shud-chat-compose {padding:6px 2px 2px}
+#shud-root .shud-chat-compose textarea {
+ display:block;width:100%;min-height:54px;max-height:90px;resize:vertical;padding:8px 10px;
+ background:#0a101a;color:#f2e3d6;border:1px solid #d34a43;border-radius:7px;
+ box-shadow:0 0 0 1px #5c2025,0 0 8px #b61b2655;font:12px system-ui,sans-serif;outline:0;
+}
+#shud-root .shud-compose-actions {display:flex;gap:5px;justify-content:flex-end;align-items:center;padding-top:5px}
+#shud-root .shud-compose-actions small {flex:1;font-size:9px;color:#bba99a}
+#shud-root .shud-compose-actions button {width:28px;height:24px;background:#4a1721;border:1px solid #a86e45;border-radius:5px}
+#shud-root .shud-chat.shud-is-composing {height:min(49vh,492px)}
+#shud-root .shud-chat.shud-is-composing .shud-compose-hint {display:none}
+/* Collapsed panels become small, unobtrusive icon-tabs, exactly as discussed. */
+#shud-root .shud-panel.is-collapsed {height:41px;width:44px;min-height:0}
+#shud-root .shud-party.is-collapsed {right:calc(clamp(338px,25vw,400px) + 30px);top:101px}
+#shud-root .shud-character.is-collapsed {top:78px;right:16px}
+#shud-root .shud-chat.is-collapsed {left:80px;bottom:18px}
+#shud-root .shud-panel.is-collapsed .shud-chat-bottom {display:none}
+#shud-root .shud-panel.is-collapsed .shud-panel-header {height:41px;min-height:41px;padding:5px}
+#shud-root .shud-panel.is-collapsed .shud-panel-header button {width:31px;height:30px}
+@media (max-width:1280px) {
+ #shud-root .shud-topbar {right:calc(min(350px,30vw) + 30px)}
+ #shud-root .shud-character {width:min(350px,30vw)}
+ #shud-root .shud-party {right:calc(min(350px,30vw) + 25px);width:185px}
+ #shud-root .shud-chat {width:350px}
+ #shud-root .shud-party.is-collapsed {right:calc(min(350px,30vw) + 25px)}
+}
+@media (max-width:980px) {
+ #shud-root .shud-topbar {right:10px;top:7px;height:48px}
+ #shud-root .shud-sigil {height:50px;width:50px;font-size:22px;margin-left:0}
+ #shud-root .shud-menus button {padding:6px 7px;min-height:34px;font-size:11px}
+ #shud-root .shud-toolrail {top:68px;left:9px}
+ #shud-root .shud-toolpalette {top:72px;left:66px}
+ #shud-root .shud-character {top:62px;right:8px;width:min(325px,40vw);height:calc(100vh - 72px)}
+ #shud-root .shud-party {top:69px;right:calc(min(325px,40vw) + 15px);width:156px}
+ #shud-root .shud-party.is-collapsed {top:69px;right:calc(min(325px,40vw) + 15px)}
+ #shud-root .shud-chat {left:65px;bottom:8px;width:min(330px,45vw);height:min(38vh,360px)}
+ #shud-root .shud-chat.is-collapsed {left:65px;bottom:8px}
+}
+@media (max-width:720px) {
+ #shud-root .shud-menus button span {display:none}
+ #shud-root .shud-menus button .fa-chevron-down {display:none}
+ #shud-root .shud-party {display:none}
+ #shud-root .shud-character {width:min(310px,52vw)}
+ #shud-root .shud-chat {width:min(300px,53vw);left:60px}
+ #shud-root .shud-panel-header strong {font-size:12px}
+}
+/* Font independent vector icons: reliable even when a Foundry installation does not expose FA globally. */
+#shud-root .shud-svg-icon {display:inline-block;vertical-align:middle;flex:none;width:17px;height:17px;stroke:currentColor;stroke-width:1.9;fill:none;pointer-events:none}
+#shud-root .shud-sigil .shud-svg-icon {width:32px;height:32px;stroke-width:1.4}
+#shud-root .shud-toolrail .shud-svg-icon {width:20px;height:20px}
+#shud-root .shud-panel-header .shud-svg-icon {width:15px;height:15px}
+#shud-root .shud-stats .shud-svg-icon {width:16px;height:16px}
+#shud-root .shud-tabbar .shud-svg-icon {width:17px;height:17px}
+#shud-root .shud-menus button .shud-ico-chevron-down {width:12px;height:12px;color:#df9766}
+#shud-root .shud-hero .shud-svg-icon {width:15px;height:15px}
+#shud-root .shud-top-right .shud-svg-icon {width:19px;height:19px}
+#shud-root .shud-nochar-symbol .shud-svg-icon {width:46px;height:46px}
+
+/* 0.3.1: Foundry's real Settings sidebar MUST be available throughout the game. */
+#shud-root .shud-core-settings {
+  display:grid!important; place-items:center; flex:none; color:#f2c48b!important;
+  border:1px solid #96603c!important; border-radius:9px!important;
+  background:linear-gradient(155deg,#38222a,#141720)!important;
+  box-shadow:inset 0 1px #c59b6455,0 0 8px #4c1a1980;
+}
+#shud-root .shud-core-settings:hover,
+#shud-root .shud-core-settings:focus-visible {
+  background:linear-gradient(#7a2931,#24131c)!important; border-color:#e1a867!important;
+}
+/* The original Settings panel gets its screen space when open; HUD state is preserved. */
+body.shud-active.shud-vanilla-sidebar #shud-root .shud-character,
+body.shud-active.shud-vanilla-sidebar #shud-root .shud-party {
+  visibility:hidden!important; pointer-events:none!important;
+}
+body.shud-active.shud-vanilla-sidebar #sidebar {
+  display:flex!important; visibility:visible!important; z-index:300!important;
+}
+
+
+/* 0.3.3 — RIGHT DOCK: Party | Steuerleiste | Charakter.
+   Die Steuerleiste bleibt fest zwischen beiden Panels. Durch die Verankerung
+   am rechten Rand gleitet sie beim Schließen des Charakterpanels nach rechts.
+   Bei vollständig geschlossenen Panels bleibt nur die Steuerleiste sichtbar. */
+#shud-root .shud-right-dock {
+  --shud-dock-rail-width: 42px;
+  --shud-dock-character-width: clamp(338px,25vw,400px);
+  --shud-dock-party-width: 216px;
+  --shud-dock-gap: 8px;
+  position:absolute;
+  top:76px;
+  right:13px;
+  bottom:16px;
+  display:flex;
+  align-items:stretch;
+  gap:var(--shud-dock-gap);
+  width:var(--shud-dock-rail-width);
+  pointer-events:none;
+  transition:width .24s ease;
+  z-index:4;
+}
+#shud-root .shud-right-dock.has-character {
+  width:calc(var(--shud-dock-rail-width) + var(--shud-dock-gap) + var(--shud-dock-character-width));
+}
+#shud-root .shud-right-dock.has-party {
+  width:calc(var(--shud-dock-rail-width) + var(--shud-dock-gap) + var(--shud-dock-party-width));
+}
+#shud-root .shud-right-dock.has-party.has-character {
+  width:calc(var(--shud-dock-rail-width) + var(--shud-dock-gap) + var(--shud-dock-party-width) + var(--shud-dock-gap) + var(--shud-dock-character-width));
+}
+#shud-root .shud-dock-rail {
+  flex:0 0 var(--shud-dock-rail-width);
+  width:var(--shud-dock-rail-width);
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:7px;
+  padding:8px 4px;
+  border:1px solid #b47642;
+  border-radius:10px;
+  background:linear-gradient(165deg,#24212bfa 0%,#151723f7 28%,#0c1019f7 100%);
+  box-shadow:0 0 0 2px #130b10,0 10px 28px #000a,inset 1px 0 #e4ab7055;
+  pointer-events:auto;
+}
+#shud-root .shud-dock-toggle {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  flex:0 0 auto;
+  width:33px;
+  height:50px;
+  border:1px solid #78533e;
+  border-radius:7px;
+  background:linear-gradient(#29242a,#121620);
+  color:#e9d5bb;
+  padding:2px;
+  box-shadow:inset 0 1px #b9916544;
+}
+#shud-root .shud-dock-toggle:hover,
+#shud-root .shud-dock-toggle:focus-visible,
+#shud-root .shud-dock-toggle.is-open {
+  background:linear-gradient(#7a2833,#31131c);
+  border-color:#e0a169;
+  box-shadow:0 0 9px #bb302f77,inset 0 1px #f4bc8055;
+}
+#shud-root .shud-dock-toggle > .shud-svg-icon {width:18px;height:18px}
+#shud-root .shud-dock-arrow .shud-svg-icon {width:13px;height:13px;color:#f6bc83}
+#shud-root .shud-dock-rail-rule {height:1px;width:25px;background:linear-gradient(90deg,transparent,#ad7547,transparent);margin-top:2px}
+#shud-root .shud-dock-rail-text {writing-mode:vertical-rl;transform:rotate(180deg);font:700 9px Georgia,serif;letter-spacing:3px;color:#8c766f;opacity:.8;white-space:nowrap;margin-top:6px}
+/* Right-side panels now participate in dock layout, never have viewport-relative offsets. */
+#shud-root .shud-right-dock > .shud-panel {
+  position:relative;
+  top:auto;
+  right:auto;
+  bottom:auto;
+  left:auto;
+  min-width:0;
+  margin:0;
+  pointer-events:auto;
+  transition:opacity .18s ease;
+}
+#shud-root .shud-right-dock > .shud-character {
+  flex:0 0 var(--shud-dock-character-width);
+  width:var(--shud-dock-character-width);
+  height:100%;
+  max-height:100%;
+}
+#shud-root .shud-right-dock > .shud-party {
+  flex:0 0 var(--shud-dock-party-width);
+  width:var(--shud-dock-party-width);
+  align-self:flex-start;
+  height:auto;
+  max-height:min(53vh,515px);
+}
+#shud-root .shud-right-dock > .shud-panel.is-collapsed {
+  display:none!important;
+}
+#shud-root .shud-right-dock .shud-party .shud-panel-header {display:flex}
+/* Native Foundry Settings and Module Management remain reachable via top-right gear. */
+body.shud-active.shud-vanilla-sidebar #shud-root .shud-right-dock {visibility:hidden;pointer-events:none}
+@media (max-width:1280px) {
+  #shud-root .shud-right-dock {--shud-dock-character-width:min(350px,30vw);--shud-dock-party-width:185px}
+}
+@media (max-width:980px) {
+  #shud-root .shud-right-dock {top:69px;right:8px;bottom:9px;--shud-dock-character-width:min(325px,40vw);--shud-dock-party-width:156px}
+}
+@media (max-width:720px) {
+  #shud-root .shud-right-dock {--shud-dock-character-width:min(300px,45vw);--shud-dock-party-width:min(152px,25vw);--shud-dock-rail-width:34px;--shud-dock-gap:5px}
+  #shud-root .shud-dock-rail {padding:6px 1px}
+  #shud-root .shud-dock-toggle {width:29px;height:43px}
+  #shud-root .shud-dock-rail-text {letter-spacing:1px;font-size:8px}
+  #shud-root .shud-party {display:flex}
+}
+@media (prefers-reduced-motion:reduce) {
+  #shud-root .shud-right-dock {transition:none}
+}
+
+/* 0.3.4 – clickable compose launcher and resilient native chat/fallback log. */
+#shud-root .shud-compose-hint button {display:flex;align-items:center;justify-content:center;gap:7px;width:100%;height:24px;padding:0;border:0;background:transparent;color:#cbb9aa;font:inherit;cursor:text}
+#shud-root .shud-compose-hint button:hover,#shud-root .shud-compose-hint button:focus-visible {color:#ffe1b1;text-decoration:underline;outline:0}
+#shud-root #shud-chat-fallback {display:flex;flex:1;flex-direction:column;min-height:0;overflow:hidden;padding:0}
+#shud-root #shud-chat-fallback[hidden] {display:none!important}
+#shud-root #shud-chat-fallback .shud-chat-fallback-heading {flex:none;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 9px;color:#d6b39b;font:600 11px system-ui,sans-serif;border-bottom:1px solid #6f3a31}
+#shud-root #shud-chat-fallback .shud-chat-fallback-heading button {padding:3px 6px;border:1px solid #8b5b41;border-radius:5px;background:#2e2025;color:#e8c9b6;font:10px system-ui,sans-serif}
+#shud-root #shud-chat-fallback-log {flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#954d37 transparent;padding:5px}
+#shud-root #shud-chat-fallback-log .chat-message {background:#19202c;border:1px solid #554039;color:#f0e4d8;border-radius:8px;margin:5px 1px;padding:6px;overflow-wrap:anywhere}
+#shud-root #shud-chat-fallback-log .message-content {font:12px/1.35 system-ui,sans-serif}
+#shud-root #shud-chat-fallback-log :is(img,video) {max-width:100%}
+
+/* 0.3.6: optional keyboard diagnostics, hidden by default. */
+#shud-root .shud-chat-debug-toggle {padding:0 6px;border:1px solid #69483e;border-radius:4px;background:#28202a;color:#e2ba8e;font:bold 11px system-ui,sans-serif;min-width:19px;height:19px}
+#shud-root .shud-chat-debug {padding:6px 9px;background:#1b1c28;border:1px solid #975a44;border-radius:7px;margin:2px 6px;color:#e4c6b2;font:11px/1.5 system-ui,sans-serif;white-space:pre-wrap}
+#shud-root .shud-chat-debug b {display:block;color:#f8d5aa}
+#shud-root .shud-chat-debug small {display:block;font-size:10px;color:#b6a39c}
+
+/* v0.3.7 Minimal role-aware playing controls. The native GM controls are never deleted. */
+#shud-root .shud-toolrail {gap:4px;padding:5px 4px;max-height:min(62vh,410px);}
+#shud-root .shud-toolrail button {width:36px;height:37px;min-height:37px;border-radius:7px;}
+#shud-root .shud-toolrail .shud-more-toggle {border-color:#916444;background:linear-gradient(#302327,#17131b);}
+#shud-root .shud-toolrail .shud-more-toggle .shud-svg-icon {width:22px;height:22px;}
+#shud-root .shud-toolpalette {left:63px;top:83px;max-width:min(290px,calc(100vw - 90px));max-height:60vh;overflow-y:auto;z-index:5;}
+#shud-root .shud-toolpalette button {width:35px;height:35px;display:grid;place-items:center;}
+#shud-root .shud-toolpalette .shud-svg-icon {width:19px;height:19px;}
+#shud-root .shud-toolmore {position:absolute;top:85px;left:63px;min-width:180px;max-width:min(260px,calc(100vw - 85px));max-height:min(68vh,560px);overflow-y:auto;z-index:6;pointer-events:auto;display:grid;gap:4px;padding:8px;background:#11151ef7;border:1px solid #a76b3c;border-radius:9px;box-shadow:0 10px 26px #000c;}
+#shud-root .shud-toolmore-title {font:700 12px Georgia,serif;color:#e1b780;margin:1px 4px 5px;}
+#shud-root .shud-toolmore .shud-more-entry {width:100%;padding:8px;display:flex;gap:9px;align-items:center;text-align:left;background:#1c1c26;border:1px solid #5e3a2e;border-radius:7px;font-size:12px;}
+#shud-root .shud-toolmore .shud-more-entry:hover,#shud-root .shud-toolmore .shud-more-entry.is-active {background:#51212a;border-color:#c75c47;}
+#shud-root .shud-toolmore .shud-more-entry svg {width:18px;height:18px;}
+@media(max-width:980px) {#shud-root .shud-toolmore,#shud-root .shud-toolpalette {left:53px;top:70px;}}
+
+
+/* v0.3.8 – LEFT DOCK: CHAT | WERKZEUGE. The chat now fills the entire left edge.
+   The tools are not free-floating; they belong to the right edge of this dock.
+   Collapsing the chat shifts the tools to x=0 and preserves their clickability. */
+body.shud-active:not(.shud-show-native-controls) :is(#controls,#scene-controls,.shud-native-scene-controls) {
+  display:none!important;
+}
+body.shud-active.shud-show-native-controls :is(#controls,#scene-controls,.shud-native-scene-controls) {
+  display:flex!important;
+  visibility:visible!important;
+  z-index:110!important;
+}
+#shud-root {
+  --shud-left-chat-width:clamp(330px,23vw,425px);
+  --shud-left-tools-width:52px;
+}
+#shud-root .shud-left-dock {
+  position:absolute;
+  z-index:5;
+  top:0;
+  bottom:0;
+  left:0;
+  width:var(--shud-left-tools-width);
+  display:flex;
+  gap:0;
+  align-items:stretch;
+  pointer-events:none;
+  transition:width .24s ease;
+}
+#shud-root .shud-left-dock.has-chat {
+  width:calc(var(--shud-left-chat-width) + var(--shud-left-tools-width));
+}
+#shud-root .shud-left-dock > .shud-chat {
+  position:relative;
+  inset:auto;
+  left:auto;
+  right:auto;
+  top:auto;
+  bottom:auto;
+  width:var(--shud-left-chat-width);
+  min-width:0;
+  flex:0 0 var(--shud-left-chat-width);
+  height:100%;
+  min-height:0;
+  max-height:100%;
+  margin:0;
+  border-radius:0 10px 10px 0;
+  transition:none;
+}
+#shud-root .shud-left-dock > .shud-chat.is-collapsed {
+  display:none!important;
+}
+#shud-root .shud-left-dock > .shud-chat.shud-is-composing {height:100%}
+#shud-root .shud-left-dock > .shud-chat .shud-panel-header {min-height:53px;padding:9px 12px}
+#shud-root .shud-left-dock > .shud-chat .shud-panel-body {flex:1;min-height:0}
+#shud-root .shud-left-dock > .shud-chat .shud-chat-bottom {flex:none}
+#shud-root .shud-left-dock > .shud-toolrail {
+  position:relative;
+  inset:auto;
+  left:auto;
+  right:auto;
+  top:auto;
+  bottom:auto;
+  width:var(--shud-left-tools-width);
+  flex:0 0 var(--shud-left-tools-width);
+  align-self:flex-start;
+  margin-top:76px;
+  min-height:0;
+  max-height:calc(100vh - 88px);
+  pointer-events:auto;
+  border-radius:0 12px 12px 0;
+  padding:7px 5px;
+  gap:5px;
+}
+#shud-root .shud-left-dock > .shud-toolrail .shud-chat-rail-toggle {
+  border-color:#b76a44;
+  background:linear-gradient(#55303a,#20141c);
+}
+#shud-root .shud-left-dock > .shud-toolrail .shud-chat-rail-toggle.is-active {
+  border-color:#e08c57;
+  background:linear-gradient(#6e202a,#2c111a);
+}
+#shud-root .shud-left-dock > :is(.shud-toolpalette,.shud-toolmore) {
+  position:absolute;
+  left:100%;
+  top:79px;
+  margin:0;
+  max-height:calc(100vh - 100px);
+  z-index:8;
+  pointer-events:auto;
+}
+#shud-root .shud-left-dock > .shud-toolmore {width:232px}
+#shud-root .shud-left-dock > .shud-toolpalette {width:max-content;min-width:164px}
+#shud-root.shud-chat-open .shud-topbar {
+  left:calc(var(--shud-left-chat-width) + var(--shud-left-tools-width) + 4px);
+}
+#shud-root.shud-chat-open .shud-menu-popup {
+  left:calc(var(--shud-left-chat-width) + var(--shud-left-tools-width) + 10px);
+}
+@media(max-width:1300px) {
+  /* Let the top menu keep its full width on smaller displays. */
+  #shud-root .shud-left-dock {top:59px}
+  #shud-root .shud-left-dock > .shud-toolrail {margin-top:8px;max-height:calc(100vh - 78px)}
+  #shud-root.shud-chat-open .shud-topbar {left:16px}
+  #shud-root.shud-chat-open .shud-menu-popup {left:84px}
+  #shud-root .shud-left-dock > :is(.shud-toolpalette,.shud-toolmore) {top:9px;max-height:calc(100vh - 85px)}
+}
+@media(max-width:720px) {
+  #shud-root {--shud-left-chat-width:min(310px,calc(100vw - 100px));--shud-left-tools-width:48px}
+  #shud-root .shud-left-dock > .shud-toolrail {padding:6px 3px}
+  #shud-root .shud-left-dock > .shud-chat .shud-panel-header {min-height:42px}
+  #shud-root .shud-chat-tray {gap:1px}
+}
+@media(prefers-reduced-motion:reduce) {
+  #shud-root .shud-left-dock {transition:none}
+}
+/* Dropdowns must stay clickable even with a full-height left dock beneath them. */
+#shud-root .shud-topbar {z-index:20}
+#shud-root .shud-menu-popup {z-index:22}
+
+/* v0.3.9 – COMBAT CAROUSEL: in-world initiative, visually inspired by the supplied
+   Carousel Combat Tracker. Independent implementation, scoped to this module. */
+#shud-root .shud-initiative {
+  pointer-events:auto;
+  position:absolute;
+  z-index:12;
+  top:79px;
+  left:calc(var(--shud-left-chat-width, 400px) + var(--shud-left-tools-width, 52px) + 14px);
+  right:46px;
+  min-width:0;
+  max-height:148px;
+  color:#f5e8d7;
+  font:12px/1.3 "Signika",system-ui,sans-serif;
+  filter:drop-shadow(0 8px 18px #000b);
+  transition:left .18s ease,right .18s ease;
+}
+#shud-root .shud-initiative[hidden] {display:none!important}
+#shud-root .shud-initiative-frame {
+  display:flex;flex-direction:column;overflow:hidden;
+  border:1px solid #aa633d;border-top:2px solid #be7d51;
+  border-radius:13px;
+  background:linear-gradient(140deg,#20212aec 0%,#0b1018f3 50%,#161018f4 100%);
+  box-shadow:0 0 0 2px #150b0e,0 11px 28px #000c,inset 0 1px #ffc18d33;
+}
+#shud-root .shud-initiative-heading {
+  flex:none;display:flex;justify-content:space-between;align-items:center;gap:6px;
+  height:29px;padding:3px 5px 3px 12px;
+  border-bottom:1px solid #532c2e;
+  background:linear-gradient(90deg,#40161e 0%,#1a1b26 55%,#260f1b 100%);
+}
+#shud-root .shud-initiative-title {display:flex;align-items:center;gap:6px;min-width:0;font:13px Georgia,serif;color:#f2d5b3;white-space:nowrap}
+#shud-root .shud-initiative-title strong {font-weight:700}
+#shud-root .shud-initiative-title .shud-svg-icon {width:17px;height:17px;color:#e6a061}
+#shud-root .shud-initiative-total {font:10px system-ui,sans-serif;color:#a99b92;white-space:nowrap}
+#shud-root .shud-initiative-toggle {
+  flex:none;width:25px;height:22px;display:grid;place-items:center;
+  border:1px solid #93583c;border-radius:5px;background:#17151c;color:#f4cfb1;
+}
+#shud-root .shud-initiative-toggle:hover {background:#61212a;border-color:#e7a16d}
+#shud-root .shud-initiative-toggle .shud-svg-icon {width:14px;height:14px}
+#shud-root .shud-initiative-body {display:flex;gap:5px;min-width:0;align-items:center;padding:6px 7px 5px;min-height:106px}
+#shud-root .shud-initiative-scroller {
+  flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;
+  padding:3px 4px 4px;align-items:center;scrollbar-width:thin;scrollbar-color:#92563e #0c1018;
+  scroll-snap-type:x proximity;
+}
+#shud-root .shud-initiative-combatant {
+  flex:0 0 74px;max-width:74px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;scroll-snap-align:center;
+  position:relative;
+}
+#shud-root .shud-initiative-combatant.is-current {flex-basis:88px;max-width:88px}
+#shud-root .shud-initiative-portrait {
+  display:block;position:relative;width:66px;height:66px;border:2px solid #8a6959;
+  border-radius:50%;padding:0;background:radial-gradient(circle at 50% 20%,#373344,#090d16);
+  box-shadow:0 3px 8px #000b,inset 0 0 9px #1f1014;
+  overflow:visible;transition:border-color .2s,box-shadow .2s,transform .2s;
+}
+#shud-root .shud-initiative-portrait > img {
+  width:100%;height:100%;object-fit:cover;object-position:center;display:block;
+  border-radius:50%;border:2px solid #18121a;
+}
+#shud-root .shud-initiative-combatant.is-current .shud-initiative-portrait {
+  width:78px;height:78px;border-color:#f0b266;
+  box-shadow:0 0 0 3px #b32233,0 0 19px #ed402977,0 6px 16px #000b;
+}
+#shud-root .shud-initiative-combatant.is-current .shud-initiative-portrait img {border-color:#5b1b26}
+#shud-root .shud-initiative-combatant.is-defeated .shud-initiative-portrait img {filter:grayscale(1) brightness(.6)}
+#shud-root .shud-initiative-combatant.is-secret .shud-initiative-portrait img {filter:brightness(.6)}
+#shud-root .shud-initiative-portrait:hover {border-color:#f4c589;transform:translateY(-2px)}
+#shud-root .shud-initiative-ini {
+  position:absolute;left:-5px;top:-5px;min-width:24px;height:22px;padding:2px 4px;
+  display:grid;place-items:center;border:1px solid #be8150;border-radius:7px;
+  background:linear-gradient(#431f29,#10111a);color:#fff2d2;font:700 11px system-ui,sans-serif;
+  box-shadow:0 2px 6px #000a;
+}
+#shud-root .shud-initiative-now {
+  position:absolute;left:50%;top:-11px;transform:translateX(-50%);
+  z-index:2;padding:2px 5px;background:linear-gradient(#c02e35,#5e111d);
+  color:#fff8e8;font:bold 8px system-ui,sans-serif;letter-spacing:.6px;white-space:nowrap;
+  border:1px solid #f1a665;border-radius:4px;box-shadow:0 0 7px #ea344455;
+}
+#shud-root .shud-initiative-hp {
+  position:absolute;bottom:0;left:9%;width:82%;height:6px;border-radius:7px;
+  overflow:hidden;background:#57202d;border:1px solid #a36f52;box-shadow:0 1px 5px #000c;
+}
+#shud-root .shud-initiative-hp > span {height:100%;display:block;background:linear-gradient(90deg,#2b8b58,#91e479);box-shadow:0 0 5px #64ef9f}
+#shud-root .shud-initiative-name {
+  display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font:600 10px system-ui,sans-serif;color:#d8c7b6;text-align:center;
+}
+#shud-root .shud-initiative-combatant.is-current .shud-initiative-name {color:#fff0d8;font-weight:700}
+#shud-root .shud-initiative-skull {position:absolute;inset:0;display:grid;place-items:center;background:#0006;color:#eea6a1;font:bold 30px Georgia,serif;border-radius:50%}
+#shud-root .shud-initiative-effects {position:absolute;right:-4px;top:-4px;min-width:18px;height:17px;padding:1px 3px;border:1px solid #7048a3;border-radius:5px;background:#241534;color:#e3d1ff;font:600 10px system-ui,sans-serif}
+#shud-root .shud-initiative-roll {padding:1px 4px;border:1px solid #91583c;border-radius:4px;background:#38202a;font:9px system-ui,sans-serif;color:#f4d9ac;display:flex;align-items:center;gap:2px}
+#shud-root .shud-initiative-roll .shud-svg-icon {width:10px;height:10px}
+#shud-root .shud-initiative-gm {display:flex;flex-direction:column;gap:5px;flex:none;padding-right:5px;border-right:1px solid #5b3935}
+#shud-root .shud-initiative-gm button,#shud-root .shud-initiative-next {
+  display:flex;align-items:center;justify-content:center;gap:3px;
+  border:1px solid #8a5843;border-radius:7px;background:linear-gradient(#38262e,#18121d);
+  min-height:28px;min-width:28px;padding:5px;color:#f1dcc3;
+}
+#shud-root .shud-initiative-gm button:hover,#shud-root .shud-initiative-next:hover {background:linear-gradient(#85232f,#36111b);border-color:#d9a16d}
+#shud-root .shud-initiative-gm .shud-svg-icon,#shud-root .shud-initiative-next .shud-svg-icon {width:15px;height:15px}
+#shud-root .shud-initiative-next {align-self:center;background:linear-gradient(#822532,#3b111b);border-color:#bf7250;white-space:nowrap;font-size:11px}
+#shud-root .shud-initiative.is-collapsed .shud-initiative-body {display:none!important}
+#shud-root .shud-initiative.is-collapsed {max-height:30px}
+#shud-root .shud-initiative.is-collapsed .shud-initiative-frame {border-radius:8px}
+#shud-root .shud-initiative-tight .shud-initiative-body {padding:3px;gap:2px}
+#shud-root .shud-initiative-tight .shud-initiative-total {display:none}
+#shud-root .shud-initiative-tight .shud-initiative-combatant {flex-basis:56px;max-width:56px}
+#shud-root .shud-initiative-tight .shud-initiative-combatant.is-current {flex-basis:62px;max-width:62px}
+#shud-root .shud-initiative-tight .shud-initiative-portrait {width:46px;height:46px}
+#shud-root .shud-initiative-tight .shud-initiative-combatant.is-current .shud-initiative-portrait {width:53px;height:53px}
+#shud-root .shud-initiative-tight .shud-initiative-name {max-width:53px;font-size:9px}
+#shud-root .shud-initiative-tight .shud-initiative-gm {flex-direction:row;flex-wrap:wrap;max-width:38px}
+#shud-root .shud-initiative-tight .shud-initiative-gm button {width:28px;min-height:22px;padding:3px}
+#shud-root .shud-initiative-tight .shud-initiative-body {min-height:87px}
+@media(max-width:980px) {
+  #shud-root .shud-initiative {top:69px}
+  #shud-root .shud-initiative-title {font-size:12px}
+}
+@media(prefers-reduced-motion:reduce) {
+  #shud-root .shud-initiative,#shud-root .shud-initiative-portrait {transition:none}
+}
+
+/* The carousel must never cover the two dock systems on narrow viewports. */
+#shud-root .shud-initiative.shud-initiative-no-room {display:none!important}
+@media(max-width:1100px) {
+  #shud-root .shud-combat-pill {display:block;max-width:105px;font-size:10px}
+}
+
+/* 0.4.0: a player's party members are informational, not character selectors. */
+#shud-root .shud-party-readonly { cursor:default; }
+#shud-root .shud-party-readonly:hover { border-color:#363844; }
+#shud-root .shud-party-readonly.is-current:hover { border-color:#a73335; }
+#shud-root .shud-dropdown-row.is-selected { border-color:#bb6145; background:#471d2a; }
+
+#shud-root .shud-initiative-combatant.is-selected .shud-initiative-portrait {outline:2px solid #f4bf74;outline-offset:2px;box-shadow:0 0 12px #ff994b88;}
+
+/* 0.4.1: click-to-expand attack, feature and spell cards */
+#shud-root .shud-action-entry {margin:0 0 6px;border:1px solid #533336;border-radius:8px;background:#171b25;overflow:hidden;transition:border-color .14s ease,background .14s ease}
+#shud-root .shud-action-entry:hover {border-color:#9b6348}
+#shud-root .shud-action-entry.is-expanded {background:linear-gradient(#241e28,#141923);border-color:#bd8054;box-shadow:inset 0 1px #ecc08733,0 0 13px #711e2833}
+#shud-root .shud-entry-head {display:flex;width:100%;align-items:center;gap:9px;text-align:left;padding:8px 9px;border:0;background:transparent;color:#f4ece1;min-height:51px;cursor:pointer}
+#shud-root .shud-entry-head:hover {background:#68303a33}
+#shud-root .shud-entry-head:focus-visible {outline:2px solid #efa667;outline-offset:-2px}
+#shud-root .shud-entry-head img {width:39px;height:39px;object-fit:cover;border-radius:5px;border:1px solid #7c533f;flex:none}
+#shud-root .shud-entry-copy {min-width:0;flex:1}
+#shud-root .shud-entry-copy b {display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:600 13px system-ui,sans-serif}
+#shud-root .shud-entry-copy small {display:block;margin-top:2px;color:#c3b09e;font:10px system-ui,sans-serif}
+#shud-root .shud-entry-chevron {flex:none;display:flex;color:#e4b97e;transition:transform .17s ease}
+#shud-root .shud-action-entry.is-expanded .shud-entry-chevron {transform:rotate(180deg)}
+#shud-root .shud-entry-details {padding:8px 9px 10px;border-top:1px solid #79483f;background:#0f131be8}
+#shud-root .shud-entry-details[hidden] {display:none!important}
+#shud-root .shud-activity-group + .shud-activity-group {margin-top:9px;padding-top:9px;border-top:1px dashed #6a3f3a}
+#shud-root .shud-activity-caption {color:#d6b08b;font:600 11px system-ui,sans-serif;margin-bottom:6px}
+#shud-root .shud-entry-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+#shud-root .shud-entry-actions .shud-roll-button {display:flex;align-items:center;justify-content:center;gap:5px;min-height:34px;white-space:normal;text-align:center;padding:6px 4px;font:600 10px system-ui,sans-serif}
+#shud-root .shud-entry-actions .shud-roll-button .shud-svg-icon {flex:none;width:15px;height:15px}
+#shud-root .shud-entry-sheet {display:flex;align-items:center;gap:6px;margin-top:10px;padding:3px;border:0;background:transparent;color:#cdb9a7;font:11px system-ui,sans-serif;text-align:left}
+#shud-root .shud-entry-sheet:hover {color:#f8d7a0}
+#shud-root .shud-spell-row {padding:0;margin:0;border:0;border-bottom:1px solid #433039;border-radius:0}
+#shud-root .shud-spell-row:last-child {border-bottom:0}
+#shud-root .shud-spell-row .shud-entry-head {padding:7px 8px}
+#shud-root .shud-spell-row .shud-entry-details {padding:8px 9px 10px}
+#shud-root .shud-spell-group > div {overflow:hidden}
+
+/* 0.4.2: native, confirmed chat deletion and a compact three-mode right dock */
+#shud-root .shud-chat-header-actions {display:flex;gap:6px;align-items:center}
+#shud-root .shud-chat-header-actions .shud-trash {color:#e5aa92;border-color:#784339}
+#shud-root .shud-chat-header-actions .shud-trash:hover {background:#7d2531;color:#fff0e6}
+#shud-root .shud-right-dock.has-actors {
+  width:calc(var(--shud-dock-rail-width) + var(--shud-dock-gap) + var(--shud-dock-party-width));
+}
+#shud-root .shud-right-dock.has-actors.has-character {
+  width:calc(var(--shud-dock-rail-width) + var(--shud-dock-gap) + var(--shud-dock-party-width) + var(--shud-dock-gap) + var(--shud-dock-character-width));
+}
+#shud-root .shud-right-dock > .shud-actors {
+  flex:0 0 var(--shud-dock-party-width);
+  width:var(--shud-dock-party-width);
+  height:min(76vh,680px);
+  max-height:100%;
+  min-height:230px;
+  align-self:flex-start;
+}
+#shud-root .shud-actors .shud-panel-body {overflow:hidden;display:flex;flex-direction:column;padding:6px;gap:6px}
+#shud-root .shud-actor-directory-head {flex:none;display:flex;flex-direction:column;gap:5px}
+#shud-root .shud-actor-directory-head label {font:600 11px system-ui,sans-serif;color:#d8b698}
+#shud-root #shud-actor-search {width:100%;min-width:0;min-height:32px;padding:6px 8px;border:1px solid #875644;border-radius:6px;background:#0f141c;color:#fff0dd;font:12px system-ui,sans-serif}
+#shud-root .shud-actor-directory-head > button {display:flex;align-items:center;gap:5px;text-align:left;border:1px solid #68473e;border-radius:6px;padding:6px;background:#251b22;color:#ebc8ae;font:10px system-ui,sans-serif}
+#shud-root .shud-actor-directory-head > button .shud-svg-icon {width:13px;height:13px}
+#shud-root .shud-actor-directory-list {overflow:auto;min-height:0;flex:1;scrollbar-width:thin;scrollbar-color:#98583e #101720}
+#shud-root .shud-actor-directory-row {display:flex;align-items:center;gap:2px;border:1px solid #403139;border-radius:7px;margin-bottom:4px;background:#161b25;min-width:0}
+#shud-root .shud-actor-directory-row[hidden] {display:none!important}
+#shud-root .shud-actor-select,#shud-root .shud-actor-readonly {display:flex;align-items:center;gap:6px;min-width:0;flex:1;border:0;background:transparent;text-align:left;padding:5px 3px;color:#e8ddce}
+#shud-root .shud-actor-select.is-current {background:#5c202d}
+#shud-root .shud-actor-select:hover {background:#4c222f}
+#shud-root .shud-actor-directory-row img {width:34px;height:34px;flex:none;object-fit:cover;border-radius:50%;border:1px solid #bb8159}
+#shud-root .shud-actor-row-copy {display:flex;flex-direction:column;gap:3px;min-width:0}
+#shud-root .shud-actor-row-copy b {white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font:600 11px system-ui,sans-serif}
+#shud-root .shud-actor-row-copy small {color:#baa89e;font:9px system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#shud-root .shud-actor-sheet {width:28px;flex:none;padding:4px;border:1px solid #76513e;border-radius:5px;background:#241923;color:#f0c799}
+#shud-root .shud-actor-sheet .shud-svg-icon {width:13px;height:13px}
+#shud-root .shud-actor-sheet:hover {background:#67303b}
+body.shud-active.shud-vanilla-sidebar #shud-root .shud-actors {visibility:hidden;pointer-events:none}
+
+/* Version 0.4.3: Unauffälliger Rückgängig-Schalter nur für Spielleiter. */
+#shud-root .shud-undo-controls { display:flex; align-items:center; border:1px solid #855137; border-radius:9px; background:linear-gradient(#29151d,#0c1019); margin-right:5px; overflow:hidden; flex:none; }
+#shud-root .shud-top-right .shud-undo-btn { width:31px; height:32px; display:flex; justify-content:center; align-items:center; color:#f4c594; }
+#shud-root .shud-top-right .shud-undo-history { width:19px; height:32px; border-left:1px solid #664035; display:flex; justify-content:center; align-items:center; }
+#shud-root .shud-top-right .shud-undo-history .shud-svg-icon { width:12px; height:12px; }
+#shud-root .shud-top-right .shud-undo-btn:disabled { opacity:.4; cursor:not-allowed; }
+#shud-root .shud-undo-history-row { display:flex; flex-direction:column; gap:3px; padding:8px 10px; border-bottom:1px solid #54322f; color:#f0dac6; font-size:12px; }
+#shud-root .shud-undo-history-row small { color:#b8a29a; font-size:10px; }
+@media(max-width:700px) { #shud-root .shud-top-right .shud-undo-history {width:16px} #shud-root .shud-top-right .shud-undo-btn {width:28px} }
+
+#shud-root .shud-undo-discard {font-size:11px;color:#bba99d;justify-content:center;}
