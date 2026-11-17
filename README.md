@@ -1,3 +1,13 @@
+# Silber HUD Overhaul v0.4.9 – Fantasy Atelier & Attributs-Popover
+
+**Korrektur der überlagerten Attributsauswahl:** Die Auswahl „Attributsprobe / Rettungswurf“ ist jetzt eine eigene, fest am geklickten Attribut ausgerichtete HUD-Ebene (`#shud-ability-popover` direkt unter `#shud-root`). Sie liegt **oberhalb** der anderen Attributfelder, Tabs und Panel-Inhalte und wird durch deren `overflow` oder `clip-path` nicht mehr abgeschnitten. Das Popover bleibt am Bildschirmrand innerhalb des Viewports, richtet sich beim Scrollen/Größenwechsel neu aus und schließt durch erneuten Klick, Escape, Klick außerhalb oder nach dem Wurf. Die Würfe laufen weiterhin über die D&D-5e-Actor-Methoden.
+
+**Weiterentwicklung der gewählten Formensprache:** Verfeinerte, länglich-ovale Navigationskapsel, transparente folioartige Seitenflächen, ein gerahmtes Porträt als eigenständiges Medaillon, schlankere und abgeschrägte Trefferpunkt-/Rüstungsleisten, sechs kompakte Attributssiegel, zurückhaltende Gruppen- und Chatkarten, schmalere Register und Initiative. Die Änderungen liegen im neuen Stylesheet `styles/theme-atelier.css`. Keine neue Bildgenerierung, kein animierter Hintergrund, keine zusätzliche Abhängigkeit.
+
+**Prüfstand:** `node --check` und Manifestprüfung erfolgreich. Isolierte Chromium-Sicht- und Funktionstests durchgeführt: beide Wurfaktionen, Popover-Positionen bei 1600 × 900 und 950 × 700, Escape/Außenklick, Umschalten zwischen Attributen und native Actor-Drag-Daten. **Ein Praxistest in einer echten Foundry-v14-Welt steht aus.**
+
+---
+
 ## Version 0.4.8 – Attributswürfe & Token-Drag-and-Drop
 
 - Klick auf eines der sechs Attributssiegel (STR, GES, KON, INT, WEI, CHA) öffnet **Attributsprobe** und **Rettungswurf**. Ein zweiter Klick schließt die Auswahl. Die Würfe laufen über die nativen D&D-5e-Aktor-Methoden inklusive ihrer Wurfoptionen, Profizienzen und Effekte; es werden keine eigenen Würfelformeln erfunden.

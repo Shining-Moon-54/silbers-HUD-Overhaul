@@ -1,8 +1,8 @@
 {
   "id": "silber-hud-overhaul",
   "title": "Silber HUD Overhaul",
-  "description": "Sculpted Dark-Fantasy-HUD mit interaktiven Attributs- und Rettungswürfen sowie nativer Token-Platzierung via Drag & Drop.",
-  "version": "0.4.8",
+  "description": "Schlankes Dark-Fantasy-HUD mit überlagernden Attributswurf-Popovers, verfeinerten Ornamentformen, Initiative, direkter D&D5e-Aktion und Token-Drag-Drop.",
+  "version": "0.4.9",
   "authors": [
     {
       "name": "Silber HUD Projekt"
@@ -20,7 +20,8 @@
     "styles/theme-fantasy.css",
     "styles/theme-immersive.css",
     "styles/theme-silhouette.css",
-    "styles/theme-interactions.css"
+    "styles/theme-interactions.css",
+    "styles/theme-atelier.css"
   ],
   "languages": [
     {

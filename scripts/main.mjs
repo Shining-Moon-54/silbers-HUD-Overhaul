@@ -1,5 +1,5 @@
 import { registerUndoTracker, getUndoHistory, subscribeUndo, undoLastStep, discardLatestUndo } from "./undo.mjs";
-/** Silber HUD Overhaul 0.4.8 - Foundry VTT 14 / dnd5e 6.x, rollable abilities and token dragging. */
+/** Silber HUD Overhaul 0.4.9 - Foundry VTT 14 / dnd5e 6.x, global ability roll overlay and refined fantasy UI. */
 const MOD = "silber-hud-overhaul";
 const ROOT_ID = "shud-root";
 const tabs = ["actions", "spells", "features", "inventory", "details"];
@@ -122,7 +122,10 @@ Hooks.once("ready", async () => {
         if (dock) state.trackerObserver.observe(dock);
       }
     }
-    window.addEventListener("resize", updateInitiativePosition);
+    window.addEventListener("resize", () => {
+      updateInitiativePosition();
+      if (state.expandedAbility) queueAbilityPopoverPosition();
+    });
     updateInitiativePosition();
   } catch (error) {
     console.error(`[${MOD}] initialization error`, error);
@@ -183,6 +186,7 @@ function createHUD() {
       <div class="shud-initiative-frame" id="shud-initiative-frame"></div>
     </section>
     <div class="shud-menu-popup" id="shud-menu-popup" hidden></div>
+    <div class="shud-ability-popover" id="shud-ability-popover" role="group" aria-label="Attributswurf auswählen" hidden></div>
     <aside class="shud-left-dock" id="shud-left-dock" aria-label="Chat und Kartenwerkzeuge">
       <section class="shud-panel shud-chat" data-panel="chat" aria-label="Chat">
       <div class="shud-panel-header"><strong>${icon("comments")} Chat</strong><div class="shud-chat-header-actions">${game.user.isGM ? `<button type="button" data-action="chat-clear" class="shud-trash" title="Gesamten Chat leeren (mit Bestätigung)" aria-label="Gesamten Chat leeren">${icon("trash")}</button>` : ""}<button type="button" data-toggle="chat" title="Chat einklappen" aria-label="Chat einklappen">${icon("angles-left")}</button></div></div>
@@ -251,8 +255,21 @@ function createHUD() {
   window.addEventListener("keyup", onGlobalKeyup, true);
   document.addEventListener("pointerdown", ev => {
     if (state.menu && !ev.target.closest("#shud-root .shud-topbar, #shud-menu-popup")) setMenu(null);
+    if (state.expandedAbility && !ev.target.closest("#shud-ability-popover, #shud-root [data-ability-toggle]")) closeAbilityPopover();
   });
-  document.addEventListener("keydown", ev => { if (ev.key === "Escape" && state.menu) setMenu(null); });
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape" && state.menu) setMenu(null);
+    if (ev.key === "Escape" && state.expandedAbility) {
+      const key = state.expandedAbility;
+      closeAbilityPopover();
+      state.root?.querySelector(`[data-ability-toggle="${key}"]`)?.focus({preventScroll:true});
+    }
+  });
+  // The popover is fixed outside all clipped character/attribute containers.
+  // Track its anchor only while displayed; scrolling never creates a new HUD render.
+  document.addEventListener("scroll", () => {
+    if (state.expandedAbility) queueAbilityPopoverPosition();
+  }, true);
   applyPanelStates();
   refreshToolRail();
 }
@@ -590,6 +607,7 @@ async function onHUDClick(event) {
     if (p === "party" && state.panels.party) refreshParty();
     if (p === "character" && state.panels.character) refreshCharacter();
     if (p === "chat" && !state.panels.chat) closeChatComposer();
+    if (p === "character" && !state.panels.character) closeAbilityPopover();
     saveState(); applyPanelStates();
     if (p === "chat") {
       state.railOpen = null;
@@ -912,24 +930,75 @@ async function rollAbilityFromHUD(button) {
   } catch (error) { reportError(error); }
 }
 
+const ABILITY_NAMES = {str:"Stärke", dex:"Geschicklichkeit", con:"Konstitution", int:"Intelligenz", wis:"Weisheit", cha:"Charisma"};
+let abilityPositionQueued = false;
+function closeAbilityPopover() {
+  state.expandedAbility = null;
+  updateAbilityOptions();
+}
+function queueAbilityPopoverPosition() {
+  if (abilityPositionQueued) return;
+  abilityPositionQueued = true;
+  requestAnimationFrame(() => {
+    abilityPositionQueued = false;
+    positionAbilityPopover();
+  });
+}
+function positionAbilityPopover() {
+  const popover = state.root?.querySelector("#shud-ability-popover");
+  const trigger = state.expandedAbility && state.root?.querySelector(`[data-ability-toggle="${state.expandedAbility}"]`);
+  if (!popover || popover.hidden || !trigger?.isConnected) return;
+  const rect = trigger.getBoundingClientRect();
+  // Hidden or off-screen trigger: dismiss instead of leaving an orphaned menu.
+  if (!rect.width || !rect.height || rect.bottom < 0 || rect.top > window.innerHeight) {
+    closeAbilityPopover(); return;
+  }
+  const width = popover.offsetWidth;
+  const height = popover.offsetHeight;
+  const pad = 12;
+  const left = Math.max(pad, Math.min(window.innerWidth - width - pad, rect.left + rect.width/2 - width/2));
+  const below = rect.bottom + 9;
+  const top = below + height + pad <= window.innerHeight
+    ? below
+    : Math.max(pad, rect.top - height - 9);
+  popover.style.left = `${Math.round(left)}px`;
+  popover.style.top = `${Math.round(top)}px`;
+}
 function updateAbilityOptions() {
-  const host = state.root?.querySelector("#shud-character-body");
-  if (!host) return;
-  host.querySelectorAll(".shud-ability-tile").forEach(tile => {
+  const root = state.root;
+  if (!root) return;
+  root.querySelectorAll(".shud-ability-tile").forEach(tile => {
     const expanded = tile.dataset.abilityId === state.expandedAbility;
     tile.classList.toggle("is-expanded", expanded);
-    const popup = tile.querySelector(".shud-ability-choices");
-    if (popup) popup.hidden = !expanded;
     const trigger = tile.querySelector(".shud-ability-trigger");
     if (trigger) trigger.setAttribute("aria-expanded", String(expanded));
   });
+  const popover = root.querySelector("#shud-ability-popover");
+  if (!popover) return;
+  const key = state.expandedAbility;
+  const trigger = key && root.querySelector(`[data-ability-toggle="${key}"]`);
+  if (!key || !trigger || trigger.disabled || !state.panels.character) {
+    popover.hidden = true;
+    popover.replaceChildren();
+    return;
+  }
+  // This is a direct child of #shud-root, never of the clipped panel.
+  const name = ABILITY_NAMES[key];
+  popover.innerHTML = `<div class="shud-ability-popover-heading"><span class="shud-ability-popover-crest">✦</span>${escapeHtml(name)}<span class="shud-ability-popover-crest">✦</span></div>
+    <div class="shud-ability-popover-actions">
+      <button type="button" data-ability-roll="check" data-ability-key="${key}">${icon("dice-d20")}<span>Attributsprobe</span>${icon("chevron-right")}</button>
+      <button type="button" data-ability-roll="save" data-ability-key="${key}">${icon("shield-halved")}<span>Rettungswurf</span>${icon("chevron-right")}</button>
+    </div>`;
+  popover.hidden = false;
+  positionAbilityPopover();
 }
 
 function toggleAbilityOptions(button) {
   const key = button.dataset.abilityToggle;
-  if (!["str", "dex", "con", "int", "wis", "cha"].includes(key)) return;
+  if (!ABILITY_NAMES[key]) return;
   state.expandedAbility = state.expandedAbility === key ? null : key;
   updateAbilityOptions();
+  if (state.expandedAbility) state.root?.querySelector("#shud-ability-popover button")?.focus({preventScroll:true});
 }
 
 /** Provide the same payload as Foundry's Actor Directory. The Canvas layer
@@ -957,6 +1026,8 @@ function onHUDActorDragStart(event) {
 }
 
 function refreshCharacter() {
+  // A refresh replaces all ability triggers: dismiss the anchored HUD popover first.
+  if (state.expandedAbility) closeAbilityPopover();
   if (!state.panels.character) return;
   const host = state.root?.querySelector("#shud-character-body"); if (!host) return;
   const actor = getActor();
@@ -981,14 +1052,9 @@ function refreshCharacter() {
         const modText = Number.isFinite(mod) ? (mod >= 0 ? `+${mod}` : String(mod)) : "";
         const expanded = state.expandedAbility === key;
         return `<div class="shud-ability-tile ${expanded ? "is-expanded" : ""}" data-ability-id="${key}">
-          <button type="button" class="shud-ability-trigger" data-ability-toggle="${key}" aria-expanded="${expanded}" aria-controls="shud-ability-actions-${key}" title="${label}: Attributsprobe oder Rettungswurf auswählen" ${canRoll ? "" : "disabled"}>
+          <button type="button" class="shud-ability-trigger" data-ability-toggle="${key}" aria-haspopup="true" aria-expanded="${expanded}" aria-controls="shud-ability-popover" title="${label}: Attributsprobe oder Rettungswurf auswählen" ${canRoll ? "" : "disabled"}>
             <b>${label}</b><strong>${escapeHtml(value)}</strong><small>${escapeHtml(modText)}</small>
           </button>
-          <div id="shud-ability-actions-${key}" class="shud-ability-choices" ${expanded ? "" : "hidden"}>
-            <span class="shud-ability-popup-title">${label} würfeln</span>
-            <button type="button" data-ability-roll="check" data-ability-key="${key}">${icon("dice-d20")} Attributsprobe</button>
-            <button type="button" data-ability-roll="save" data-ability-key="${key}">${icon("shield-halved")} Rettungswurf</button>
-          </div>
         </div>`;
       }).join("")}</div>`
     : "";
