@@ -1,3 +1,28 @@
+## Installation & automatische Updates über GitHub Releases
+
+**Foundry VTT v14** · Modul-ID `silber-hud-overhaul`
+
+In Foundry im **Setup** (nicht innerhalb einer Welt) → **Zusatzmodule** → **Modul installieren** die folgende Manifest-URL einfügen:
+
+```text
+https://github.com/Shining-Moon-54/silbers-HUD-Overhaul/releases/latest/download/module.json
+```
+
+Danach das Modul in der gewünschten Welt aktivieren. Für neue Versionen lässt sich die normale **Modul aktualisieren**-Funktion in Foundry verwenden. Wenn das HUD bisher nur manuell als ZIP kopiert wurde, vor der Neuinstallation die Welt sichern und keine parallele Installation desselben Moduls anlegen.
+
+**GitHub Releases:** https://github.com/Shining-Moon-54/silbers-HUD-Overhaul/releases
+
+### Neue Version veröffentlichen
+
+1. In `module.json` die `version` erhöhen (beispielsweise auf `0.4.6`).
+2. Die Änderungen auf `main` pushen.
+3. GitHub Actions → **Publish Foundry module** erstellt bei einer noch nicht veröffentlichten Version automatisch Tag, Release, installierbare `silber-hud-overhaul.zip` und releasegebundene `module.json`.
+4. Der stabile Manifest-Link bleibt dabei identisch. Für einen Versionswechsel immer die Versionsnummer erhöhen; ein vorhandenes Release wird nicht überschrieben.
+
+Der Workflow erfordert in GitHub Actions die Berechtigung **Contents: write**, die in der Workflow-Datei angefordert wird. Sollten Repository-Richtlinien das verweigern, die Workflow-Berechtigungen in GitHub unter *Settings → Actions → General* prüfen.
+
+---
+
 # Silber HUD Overhaul v0.4.5 – Dark-Fantasy-Design
 
 **Design-Update auf Basis unserer Bildvorschau.** Ziel: näher am ursprünglichen, dunkelrot/goldenen Fantasy-Look, ohne neue Leistungskosten während des Spielens.
