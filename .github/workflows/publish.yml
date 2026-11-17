@@ -79,12 +79,26 @@ jobs:
           PY
 
           cp module.json dist/module.json
-          zip -q -9 dist/silber-hud-overhaul.zip \
-            module.json README.md LICENSE \
-            scripts/main.mjs scripts/undo.mjs \
-            styles/hud.css styles/theme-fantasy.css \
-            assets/corner-scroll.svg assets/gilded-flourish.svg \
-            lang/de.json
+          # Package all files declared by module.json, plus the module's assets.
+          # Never hard-code CSS names: a new visual theme must be included automatically.
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from zipfile import ZIP_DEFLATED, ZipFile
+
+          manifest = json.loads(Path("module.json").read_text(encoding="utf-8"))
+          paths = ["module.json", "README.md", "LICENSE", "scripts/undo.mjs"]
+          paths += manifest.get("esmodules", [])
+          paths += manifest.get("styles", [])
+          paths += [lang["path"] for lang in manifest.get("languages", [])]
+          paths += [str(p) for p in Path("assets").rglob("*") if p.is_file()]
+          with ZipFile("dist/silber-hud-overhaul.zip", "w", ZIP_DEFLATED, compresslevel=9) as z:
+              for name in dict.fromkeys(paths):
+                  path = Path(name)
+                  if not path.is_file():
+                      raise SystemExit(f"Missing release file: {name}")
+                  z.write(path, arcname=name)
+          PY
           unzip -t dist/silber-hud-overhaul.zip
 
       - name: Publish versioned release
@@ -94,7 +108,11 @@ jobs:
         run: |
           set -euo pipefail
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "Release $RELEASE_TAG already exists. Increase module.json version to publish a new version."
+            echo "Release $RELEASE_TAG already exists. Updating its assets to match the current manifest."
+            gh release upload "$RELEASE_TAG" \
+              dist/silber-hud-overhaul.zip \
+              dist/module.json \
+              --repo "$GITHUB_REPOSITORY" --clobber
             exit 0
           fi
 
