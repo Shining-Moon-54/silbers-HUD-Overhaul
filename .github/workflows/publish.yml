@@ -1,0 +1,108 @@
+name: Publish Foundry module
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - module.json
+      - scripts/**
+      - styles/**
+      - assets/**
+      - lang/**
+      - README.md
+      - LICENSE
+      - .github/workflows/publish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: foundry-module-release
+  cancel-in-progress: false
+
+jobs:
+  package-and-release:
+    name: Build ZIP and publish GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Validate module and sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check scripts/main.mjs
+          node --check scripts/undo.mjs
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import re
+
+          manifest = json.loads(pathlib.Path("module.json").read_text(encoding="utf-8"))
+          assert manifest["id"] == "silber-hud-overhaul", "Unexpected module ID"
+          assert re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", manifest["version"]), "Use x.y.z version format"
+          for filename in (
+              manifest.get("esmodules", [])
+              + manifest.get("styles", [])
+              + [entry["path"] for entry in manifest.get("languages", [])]
+          ):
+              assert pathlib.Path(filename).is_file(), f"Missing module file: {filename}"
+          assert manifest["manifest"] == (
+              "https://github.com/Shining-Moon-54/silbers-HUD-Overhaul/"
+              "releases/latest/download/module.json"
+          ), "Manifest must use the stable release URL"
+          PY
+
+      - name: Assemble Foundry installation archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          version="$(python3 -c 'import json; print(json.load(open("module.json"))["version"])')"
+          echo "RELEASE_TAG=v${version}" >> "$GITHUB_ENV"
+
+          # The released manifest and archive point to this immutable release.
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("module.json")
+          manifest = json.loads(path.read_text(encoding="utf-8"))
+          version = manifest["version"]
+          manifest["download"] = (
+              "https://github.com/Shining-Moon-54/silbers-HUD-Overhaul/"
+              f"releases/download/v{version}/silber-hud-overhaul.zip"
+          )
+          path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          PY
+
+          cp module.json dist/module.json
+          zip -q -9 dist/silber-hud-overhaul.zip \
+            module.json README.md LICENSE \
+            scripts/main.mjs scripts/undo.mjs \
+            styles/hud.css styles/theme-fantasy.css \
+            assets/corner-scroll.svg assets/gilded-flourish.svg \
+            lang/de.json
+          unzip -t dist/silber-hud-overhaul.zip
+
+      - name: Publish versioned release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists. Increase module.json version to publish a new version."
+            exit 0
+          fi
+
+          gh release create "$RELEASE_TAG" \
+            dist/silber-hud-overhaul.zip \
+            dist/module.json \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Silber HUD Overhaul $RELEASE_TAG" \
+            --target "$GITHUB_SHA" \
+            --generate-notes \
+            --latest
