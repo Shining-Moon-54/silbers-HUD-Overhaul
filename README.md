@@ -1,3 +1,34 @@
+# Silber HUD Overhaul v0.5.0 – Visual Redesign
+
+**Ausrichtung:** Die freigegebene Dark-Fantasy-Vorlage wird als Maßstab für die tatsächliche Foundry-Oberfläche verwendet. Diese Version ist eine zusammenhängende Überarbeitung, keine weitere Schicht über sechs alten Designs.
+
+## Sichtbare Änderungen
+
+- Ein neu ausgerichtetes, mittig schwebendes Navigationsinstrument mit geschwungenen Enden, statt einer gewöhnlichen Menüleiste.
+- Docks in den Proportionen der Zielvorlage: hoher Chat links mit daran hängender Werkzeugleiste, Gruppe links der Dock-Steuerung und Charakter rechts.
+- Komplett neu aufgebauter Charakterkopf mit großem rundem Porträt, darunter schmale HP-/Zauberplatzbänder, RK, Bewegung, sechs klickbare Attributssiegel und kompakte Tab-Auswahl.
+- Kompaktes, über der Karte schwebendes Initiative-Karussell anstelle einer breiten Overlay-Leiste.
+- Mehr Transparenz, kleinere Ornamente, schmalere Listeneinträge und ein stärker eingebettetes Dice Tray.
+- Statt sechs nacheinander geladenen Stilkorrekturen: **`styles/hud.css` + `styles/theme-interactions.css` + `styles/theme-v050.css`**. Die zuvor vorhandenen älteren CSS-Dateien sind nicht mehr aktiv.
+
+## Funktionen und Tests
+
+Die bestehenden Funktionen bleiben erhalten: Enter-Chat, Dice Tray, anklickbare Würfelkarten, GM-Modulverwaltung, Gruppe und Akteure, Dragon-and-Drop von Actor-Tokens, D&D5e-Aktivitäten, Attributsproben/Rettungswürfe, Initiative und GM-Undo.
+
+Der isolierte Browser-Test mit echtem Modul-JavaScript und tatsächlich erzeugtem HUD-DOM hat die Auswahl-, Würfel-, Drag-&-Drop-, Chat-, Tab- und Dock-Abläufe bestanden. **Das ist kein vollständiger Live-Test in einer Foundry-v14-Welt**. Die Testszene und Testporträts stammen aus der vom Nutzer gelieferten Referenzgrafik und werden **nicht** mit dem Modul ausgeliefert; echte Foundry-Szenen und Akteursbilder bestimmen die Inhalte im Spiel.
+
+WICHTIG: Bei zu geringen Fensterbreiten können gleichzeitig geöffnete Chat-, Gruppen- und Charakterpanels die sichtbare Karte stark verkleinern. Panels sind weiterhin unabhängig einklappbar.
+
+## Installation und Updates
+
+Manifest-URL im Foundry-Setup:
+
+`https://github.com/Shining-Moon-54/silbers-HUD-Overhaul/releases/latest/download/module.json`
+
+Bei bestehenden Installationen das Modul im Foundry-Setup aktualisieren und danach Foundry/Browser neu laden. Für eigene Änderungen siehe die dokumentierten Funktionen und Module unten.
+
+---
+
 # Silber HUD Overhaul v0.4.9 – Fantasy Atelier & Attributs-Popover
 
 **Korrektur der überlagerten Attributsauswahl:** Die Auswahl „Attributsprobe / Rettungswurf“ ist jetzt eine eigene, fest am geklickten Attribut ausgerichtete HUD-Ebene (`#shud-ability-popover` direkt unter `#shud-root`). Sie liegt **oberhalb** der anderen Attributfelder, Tabs und Panel-Inhalte und wird durch deren `overflow` oder `clip-path` nicht mehr abgeschnitten. Das Popover bleibt am Bildschirmrand innerhalb des Viewports, richtet sich beim Scrollen/Größenwechsel neu aus und schließt durch erneuten Klick, Escape, Klick außerhalb oder nach dem Wurf. Die Würfe laufen weiterhin über die D&D-5e-Actor-Methoden.

@@ -408,10 +408,16 @@ function updateInitiativePosition() {
   let available = viewWidth - left - right;
   // On small screens two fully expanded side docks leave almost no map visible:
   // keep the carousel in a compact, unobtrusive state instead of covering HUD panels.
-  track.style.left = `${left}px`;
-  track.style.right = `${right}px`;
-  // Don't draw controls on top of an expanded chat or character dock.
-  // The persistent Kampf menu in the top bar is the small-screen fallback.
+  // Center the carousel in the playable space, but favor the viewport center like
+  // the approved reference. Never overlay either dock or force a full-width bar.
+  const visibleWidth = Math.max(0, Math.min(550, available - 8));
+  const desiredLeft = Math.round((viewWidth - visibleWidth) / 2);
+  const availableRightEdge = viewWidth - right;
+  const centerLeft = Math.max(left, Math.min(desiredLeft, availableRightEdge - visibleWidth));
+  track.style.left = `${centerLeft}px`;
+  track.style.right = "auto";
+  track.style.width = `${visibleWidth}px`;
+  // The persistent Kampf menu is the small-screen fallback.
   track.classList.toggle("shud-initiative-no-room", available < 235);
   track.classList.toggle("shud-initiative-tight", available < 390);
 }
@@ -1058,16 +1064,32 @@ function refreshCharacter() {
         </div>`;
       }).join("")}</div>`
     : "";
+  // D&D5e resources are displayed as a small companion to HP, not a generic mana bar.
+  // Preserve the raw actor data and only sum the existing leveled spell slots.
+  const slots = actor.system?.spells || {};
+  const tierSlots = Object.entries(slots).filter(([k,v]) => /^spell[1-9]$/.test(k) && Number(v?.max) > 0);
+  const slotsMax = tierSlots.reduce((sum,[,v]) => sum + Number(v.max || 0), 0);
+  const slotsLeft = Math.min(slotsMax, tierSlots.reduce((sum,[,v]) => sum + Math.max(0,Number(v.value || 0)), 0));
+  const hpPercent = Math.min(100,Math.max(0,Number(stats.max) ? Number(stats.current) / Number(stats.max) * 100 : 0));
   host.innerHTML = `
-    <div class="shud-hero"><img src="${img(actor.img)}" alt="" class="shud-hero-image"><div class="shud-hero-overlay"><div class="shud-hero-title"><img src="${img(actor.img)}" alt="" draggable="${owned(actor) ? "true" : "false"}" ${owned(actor) ? `data-drag-actor="${escapeHtml(actor.id)}" title="Token auf die Karte ziehen"` : ""}><div><h2>${escapeHtml(actor.name)}</h2><small>${escapeHtml(actorLabel(actor))}</small></div></div>${game.user.isGM ? `<button class="shud-choose-character" data-menu="characters" title="Figur auswählen oder abwählen">${icon("users")}</button>` : ""}</div></div>
-    <div class="shud-stats"><div><strong>${icon("heart")} ${tp}</strong><small>Trefferpunkte</small></div><div><strong>${icon("shield")} ${escapeHtml(stats.ac)}</strong><small>Rüstungsklasse</small></div><div><strong>${icon("shoe-prints")} ${escapeHtml(stats.movement)}</strong><small>Bewegung</small></div></div>
+    <div class="shud-hero">
+      <div class="shud-hero-heading"><span class="shud-hero-crest" aria-hidden="true">✥</span><h2>${escapeHtml(actor.name)}</h2></div>
+      <img src="${img(actor.img)}" alt="Porträt ${escapeHtml(actor.name)}" class="shud-hero-image" draggable="${owned(actor) ? "true" : "false"}" ${owned(actor) ? `data-drag-actor="${escapeHtml(actor.id)}" title="Token auf die Karte ziehen"` : ""}>
+      <div class="shud-hero-overlay"><div class="shud-hero-title"><small>${escapeHtml(actorLabel(actor))}</small></div>${game.user.isGM ? `<button class="shud-choose-character" data-menu="characters" title="Figur auswählen oder abwählen" aria-label="Figur wechseln">${icon("users")}</button>` : ""}</div>
+    </div>
+    <div class="shud-stats">
+      <div class="shud-vital shud-hp"><strong>${icon("heart")} ${tp} TP</strong><span class="shud-vital-track"><span style="width:${hpPercent.toFixed(1)}%"></span></span></div>
+      ${slotsMax ? `<div class="shud-vital shud-slots"><strong>${icon("wand-magic-sparkles")} ${slotsLeft} / ${slotsMax} Zauberplätze</strong><span class="shud-vital-track"><span style="width:${(slotsLeft / slotsMax * 100).toFixed(1)}%"></span></span></div>` : ""}
+      <div class="shud-stat-minor">${icon("shield")} <b>${escapeHtml(stats.ac)}</b><small>RK</small></div>
+      <div class="shud-stat-minor">${icon("shoe-prints")} <b>${escapeHtml(stats.movement)}</b><small>Bewegung</small></div>
+    </div>
     ${abilityGrid}
     <div class="shud-tabbar" role="tablist">
-      <button role="tab" data-tab="actions" class="${state.tab === "actions" ? "active" : ""}">${icon("bolt")}<span>Aktionen</span></button>
-      <button role="tab" data-tab="spells" class="${state.tab === "spells" ? "active" : ""}">${icon("wand-magic-sparkles")}<span>Zauber</span></button>
-      <button role="tab" data-tab="features" class="${state.tab === "features" ? "active" : ""}">${icon("hand-fist")}<span>Fähigkeiten</span></button>
-      <button role="tab" data-tab="inventory" class="${state.tab === "inventory" ? "active" : ""}">${icon("briefcase")}<span>Inventar</span></button>
-      <button role="tab" data-tab="details" class="${state.tab === "details" ? "active" : ""}">${icon("circle-info")}<span>Details</span></button>
+      <button role="tab" title="Angriffe und Aktionen" data-tab="actions" class="${state.tab === "actions" ? "active" : ""}">${icon("bolt")}<span>Aktionen</span></button>
+      <button role="tab" title="Zauber" data-tab="spells" class="${state.tab === "spells" ? "active" : ""}">${icon("wand-magic-sparkles")}<span>Zauber</span></button>
+      <button role="tab" title="Ausrüstung und Inventar" data-tab="inventory" class="${state.tab === "inventory" ? "active" : ""}">${icon("briefcase")}<span>Ausrüstung</span></button>
+      <button role="tab" title="Fähigkeiten" aria-label="Fähigkeiten" data-tab="features" class="${state.tab === "features" ? "active" : ""}">${icon("hand-fist")}<span>Fähigkeiten</span></button>
+      <button role="tab" title="Details" aria-label="Details" data-tab="details" class="${state.tab === "details" ? "active" : ""}">${icon("circle-info")}<span>Details</span></button>
     </div>
     <div class="shud-content">${contentForTab(actor)}</div>`;
   filterSpells();
