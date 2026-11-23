@@ -33,8 +33,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node --check scripts/main.mjs
-          node --check scripts/undo.mjs
+          for source in scripts/*.mjs; do node --check "$source"; done
+          if compgen -G "tests/*.test.mjs" > /dev/null; then node --test tests/*.test.mjs; fi
           python3 - <<'PY'
           import json
           import pathlib
@@ -87,7 +87,8 @@ jobs:
           from zipfile import ZIP_DEFLATED, ZipFile
 
           manifest = json.loads(Path("module.json").read_text(encoding="utf-8"))
-          paths = ["module.json", "README.md", "LICENSE", "scripts/undo.mjs"]
+          paths = ["module.json", "README.md", "LICENSE"]
+          paths += [str(p) for p in Path("scripts").rglob("*.mjs") if p.is_file()]
           paths += manifest.get("esmodules", [])
           paths += manifest.get("styles", [])
           paths += [lang["path"] for lang in manifest.get("languages", [])]

@@ -458,3 +458,48 @@
 /* A permanent tutorial paragraph competes with live spell cards in a compact panel.
    Instructions remain in the README; the buttons retain accessible titles. */
 #shud-root .shud-content > p.shud-hint {display:none}
+
+/* v0.5.1 – Player and independent D&D5e groups, in the same engraved style. */
+#shud-root .shud-member-group,
+#shud-root .shud-actor-group {
+  min-width: 0;
+  border-bottom: 1px solid #a27c4752;
+  padding: 0 0 4px;
+  margin-bottom: 5px;
+}
+#shud-root .shud-member-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 32px;
+  padding: 5px 7px;
+  border: 0;
+  border-bottom: 1px solid #d2a97870;
+  border-radius: 5px 5px 0 0;
+  background: linear-gradient(100deg,#512037b3,#1b1823ca 72%,#311924a0);
+  color: #ead3ab;
+  text-align: left;
+  font: 600 12px Georgia,serif;
+}
+#shud-root .shud-member-group-toggle:hover,
+#shud-root .shud-member-group-toggle:focus-visible {
+  background:linear-gradient(110deg,#732941c7,#261b2bc8);
+  outline: 1px solid #d4a663;
+}
+#shud-root .shud-member-group-toggle .shud-svg-icon {width:14px;height:14px;flex:none}
+#shud-root .shud-group-name {overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1}
+#shud-root .shud-group-count {
+  font: 600 10px Georgia,serif;
+  min-width: 21px;
+  text-align:center;
+  border:1px solid #ac80546b;
+  border-radius: 11px;
+  background:#0d101c;
+  padding:2px 4px;
+}
+#shud-root .shud-member-group-list {padding: 3px 1px 2px;min-width:0}
+#shud-root .shud-group-empty {padding: 9px 6px; font: italic 11px Georgia,serif; color:#bca88e}
+#shud-root .shud-party .shud-panel-body {overflow-y:auto;min-height:0}
+#shud-root .shud-actor-group-items {min-width:0}
+#shud-root .shud-party-member {width:100%;}

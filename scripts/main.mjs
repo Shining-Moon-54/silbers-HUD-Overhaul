@@ -1,5 +1,6 @@
 import { registerUndoTracker, getUndoHistory, subscribeUndo, undoLastStep, discardLatestUndo } from "./undo.mjs";
-/** Silber HUD Overhaul 0.4.9 - Foundry VTT 14 / dnd5e 6.x, global ability roll overlay and refined fantasy UI. */
+import { partyGroups, actorDirectoryGroups } from "./groups.mjs";
+/** Silber HUD Overhaul 0.5.1 - Foundry VTT 14 / dnd5e 6.x, global ability roll overlay and refined fantasy UI. */
 const MOD = "silber-hud-overhaul";
 const ROOT_ID = "shud-root";
 const tabs = ["actions", "spells", "features", "inventory", "details"];
@@ -9,7 +10,7 @@ const state = { root: null, actorId: null, actorTokenId: null, tab: "spells", me
   composing: false, rollModifier: 0, railOpen: null, railMore: false, submitting: false,
   chatMountPromise: null, chatFallbackRendering: false, chatDebugVisible: false,
   enterSeen: {keydown: 0, keyup: 0, keybind: 0}, suppressEnterKeyup: false, lastEnterInfo: "Noch kein Enter erkannt",
-  trackerCollapsed: false, trackerObserver: null, expandedEntry: null, expandedAbility: null };
+  trackerCollapsed: false, trackerObserver: null, expandedEntry: null, expandedAbility: null, partyGroupOpen: {}, actorGroupOpen: {} };
 
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -153,12 +154,18 @@ function loadState() {
     for (const p of Object.keys(state.panels)) if (typeof saved[p] === "boolean") state.panels[p] = saved[p];
     if (tabs.includes(saved.tab)) state.tab = saved.tab;
     if (typeof saved.trackerCollapsed === "boolean") state.trackerCollapsed = saved.trackerCollapsed;
+    if (saved.partyGroupOpen && typeof saved.partyGroupOpen === "object" && !Array.isArray(saved.partyGroupOpen)) {
+      state.partyGroupOpen = Object.fromEntries(Object.entries(saved.partyGroupOpen).filter(([id, value]) => id.length < 90 && typeof value === "boolean").slice(0, 80));
+    }
+    if (saved.actorGroupOpen && typeof saved.actorGroupOpen === "object" && !Array.isArray(saved.actorGroupOpen)) {
+      state.actorGroupOpen = Object.fromEntries(Object.entries(saved.actorGroupOpen).filter(([id, value]) => id.length < 90 && typeof value === "boolean").slice(0, 80));
+    }
     // Gruppe und Akteure teilen dieselbe Fläche links der Steuerleiste.
     if (state.panels.actors && state.panels.party) state.panels.party = false;
   } catch (err) { console.debug(`[${MOD}] Panel state reset`, err); }
 }
 function saveState() {
-  try { localStorage.setItem(storageKey(), JSON.stringify({ ...state.panels, tab: state.tab, trackerCollapsed: state.trackerCollapsed })); }
+  try { localStorage.setItem(storageKey(), JSON.stringify({ ...state.panels, tab: state.tab, trackerCollapsed: state.trackerCollapsed, partyGroupOpen: state.partyGroupOpen, actorGroupOpen: state.actorGroupOpen })); }
   catch (err) { console.debug(`[${MOD}] State not saved`, err); }
 }
 function createHUD() {
@@ -580,11 +587,21 @@ async function onHUDClick(event) {
   // The embedded native chat needs all of its own clicks and event delegation.
   // Don't prevent its roll-card, context-menu, speaker or chat message actions.
   if (button.closest(".shud-embedded-chat")) return;
-  if (!button.matches("[data-menu],[data-toggle],[data-die],[data-mod],[data-control-id],[data-control-tool],[data-rail-more],[data-native-tab],[data-open-doc],[data-focus-token],[data-tab],[data-actor],[data-item-sheet],[data-entry-toggle],[data-spell-action],[data-action],[data-initiative-toggle],[data-initiative-action],[data-initiative-focus],[data-view-actor],[data-ability-toggle],[data-ability-roll]")) return;
+  if (!button.matches("[data-menu],[data-toggle],[data-die],[data-mod],[data-control-id],[data-control-tool],[data-rail-more],[data-native-tab],[data-open-doc],[data-focus-token],[data-tab],[data-actor],[data-item-sheet],[data-entry-toggle],[data-spell-action],[data-action],[data-initiative-toggle],[data-initiative-action],[data-initiative-focus],[data-view-actor],[data-ability-toggle],[data-ability-roll],[data-party-group-toggle],[data-actor-group-toggle]")) return;
   event.preventDefault();
   event.stopPropagation();
   // Release retained button focus so Enter reopens the composer after UI actions.
   button.blur();
+  if (button.dataset.partyGroupToggle) {
+    const id = button.dataset.partyGroupToggle;
+    state.partyGroupOpen[id] = !(state.partyGroupOpen[id] ?? (id === "player"));
+    saveState(); refreshParty(); return;
+  }
+  if (button.dataset.actorGroupToggle) {
+    const id = button.dataset.actorGroupToggle;
+    state.actorGroupOpen[id] = !(state.actorGroupOpen[id] ?? (id === "player"));
+    saveState(); refreshActors(); return;
+  }
   if (button.hasAttribute("data-initiative-toggle")) {
     state.trackerCollapsed = !state.trackerCollapsed;
     saveState(); refreshInitiativeTrack(); return;
@@ -783,7 +800,7 @@ async function onHUDClick(event) {
 function onHUDInput(event) {
   if (event.target.matches("#shud-actor-search")) {
     state.actorFilter = event.target.value;
-    filterActors();
+    refreshActors();
   }
   if (event.target.matches("#shud-spell-search")) {
     state.filter = event.target.value;
@@ -834,37 +851,39 @@ function refreshParty() {
   if (!state.panels.party) return;
   const host = state.root?.querySelector("#shud-party-body"); if (!host) return;
   const selected = getActor();
-  const seen = new Set(), rows = [];
-  const appendMember = (actor, online = false) => {
-    if (!actor || !hasAccess(actor) || seen.has(actor.id)) return;
-    seen.add(actor.id);
+  const groups = partyGroups({
+    users: game.users, actors: game.actors?.contents || game.actors,
+    canView: actor => hasAccess(actor), currentUserId: game.user.id,
+    selectedActor: game.user.isGM ? selected : null
+  });
+  const memberRow = ({ actor, online }) => {
     const hp = hpStats(actor), active = actor.id === selected?.id;
-    const tooltip = game.user.isGM
+    const tip = game.user.isGM
       ? `${actor.name} – ${active ? "Auswahl mit Linksklick aufheben" : "Mit Linksklick auswählen"}`
       : `${actor.name} – Hauptcharakter wird in Foundry zugewiesen`;
     const inner = `<img src="${img(actor.img)}" alt="" draggable="false"><span class="shud-party-copy"><b>${escapeHtml(actor.name)}</b><small>${hp.current} / ${hp.max} TP ${online ? "· online" : ""}</small><span class="shud-hp-track"><span style="width:${hp.pct}%"></span></span></span>`;
     const canDrag = game.user.isGM || owned(actor);
     const dragAttrs = canDrag ? `draggable="true" data-drag-actor="${escapeHtml(actor.id)}"` : "";
     const dragHint = canDrag ? " · Zum Platzieren auf die Karte ziehen" : "";
-    rows.push(game.user.isGM
-      ? `<button type="button" class="shud-party-member ${active ? "is-current" : ""}" data-actor="${escapeHtml(actor.id)}" ${dragAttrs} aria-pressed="${active}" title="${escapeHtml(tooltip + dragHint)}">${inner}</button>`
-      : `<div class="shud-party-member ${active ? "is-current" : ""} shud-party-readonly" ${dragAttrs} title="${escapeHtml(tooltip + dragHint)}">${inner}</div>`);
+    return game.user.isGM
+      ? `<button type="button" class="shud-party-member ${active ? "is-current" : ""}" data-actor="${escapeHtml(actor.id)}" ${dragAttrs} aria-pressed="${active}" title="${escapeHtml(tip + dragHint)}">${inner}</button>`
+      : `<div class="shud-party-member ${active ? "is-current" : ""} shud-party-readonly" ${dragAttrs} title="${escapeHtml(tip + dragHint)}">${inner}</div>`;
   };
-  // The player's own main character is always the first entry on the left.
-  const users = Array.from(game.users);
-  if (!game.user.isGM) users.sort((a,b) =>
-    Number(b.character?.id === game.user.character?.id && Boolean(b.character)) -
-    Number(a.character?.id === game.user.character?.id && Boolean(a.character)));
-  for (const user of users) appendMember(user.character, user.active);
-  // In worlds without user assignment provide a meaningful GM selection list.
-  if (!rows.length && game.user.isGM) {
-    for (const actor of characterChoices().slice(0, 8)) appendMember(actor);
-  }
-  // A GM may select an NPC from the actor selector that is not part of the party.
-  if (game.user.isGM && selected && !seen.has(selected.id)) appendMember(selected);
-  host.innerHTML = rows.length ? rows.join("") : `<div class="shud-empty">Keine zugänglichen Spielercharaktere.</div>`;
+  host.innerHTML = groups.map(group => {
+    const expanded = state.partyGroupOpen[group.id] ?? group.id === "player";
+    const count = group.members.length;
+    const content = expanded ? (count
+      ? group.members.map(memberRow).join("")
+      : `<div class="shud-group-empty">${group.id === "player" ? "Noch kein Spielercharakter in Foundry zugewiesen." : "Keine sichtbaren Mitglieder."}</div>`) : "";
+    return `<section class="shud-member-group ${expanded ? "is-expanded" : "is-collapsed"}" data-group="${escapeHtml(group.id)}">
+      <button type="button" class="shud-member-group-toggle" data-party-group-toggle="${escapeHtml(group.id)}" aria-expanded="${expanded}" aria-label="Gruppe ${escapeHtml(group.name)} ${expanded ? "einklappen" : "ausklappen"}">
+        ${icon("users")}<span class="shud-group-name">${escapeHtml(group.name)}</span><span class="shud-group-count">${count}</span>${icon(expanded ? "chevron-down" : "chevron-right")}
+      </button>
+      ${expanded ? `<div class="shud-member-group-list">${content}</div>` : ""}
+    </section>`;
+  }).join("");
   const count = state.root.querySelector('.shud-party .shud-panel-header strong span');
-  if (count) count.textContent = `Gruppe (${rows.length})`;
+  if (count) count.textContent = `Gruppen (${groups.length})`;
 }
 
 /** Optional world actor directory. GMs see all; players see only actors they
@@ -873,14 +892,18 @@ function refreshActors() {
   if (!state.panels.actors) return;
   const host = state.root?.querySelector("#shud-actors-body");
   if (!host) return;
-  const actors = Array.from(game.actors?.contents || game.actors || [])
-    .filter(a => hasAccess(a, "OBSERVER"))
-    .sort((a, b) => a.name.localeCompare(b.name, "de", {numeric:true}));
+  const groups = actorDirectoryGroups({
+    users: game.users, actors: game.actors?.contents || game.actors,
+    canView: actor => hasAccess(actor, "OBSERVER"), currentUserId: game.user.id
+  });
   const selectedId = getActor()?.id;
   const previousList = host.querySelector(".shud-actor-directory-list");
   const previousScroll = previousList?.scrollTop || 0;
-  const wasSearching = document.activeElement === host.querySelector("#shud-actor-search");
-  const rows = actors.map(a => {
+  const oldSearch = host.querySelector("#shud-actor-search");
+  const wasSearching = document.activeElement === oldSearch;
+  const selection = wasSearching ? [oldSearch.selectionStart, oldSearch.selectionEnd] : null;
+  const query = state.actorFilter.trim().toLocaleLowerCase("de");
+  const itemRow = a => {
     const isCurrent = game.user.isGM && selectedId === a.id;
     const title = escapeHtml(a.name);
     const pic = `<img src="${img(a.img)}" alt="" draggable="false">`;
@@ -892,21 +915,30 @@ function refreshActors() {
       ? `<button type="button" class="shud-actor-select ${isCurrent ? "is-current" : ""}" data-actor="${escapeHtml(a.id)}" ${dragAttrs} aria-pressed="${isCurrent}" title="${isCurrent ? "Auswahl aufheben" : "Im Charakterfenster anzeigen"}${dragHint}">${pic}${summary}</button>`
       : `<span class="shud-actor-readonly" ${dragAttrs} title="${escapeHtml(a.name)}${dragHint}">${pic}${summary}</span>`;
     return `<div class="shud-actor-directory-row ${canDrag ? "shud-can-drag" : ""}" data-actor-row>${select}<button type="button" class="shud-actor-sheet" data-view-actor="${escapeHtml(a.id)}" aria-label="Bogen von ${title} öffnen" title="Original-Charakterbogen öffnen">${icon("up-right-from-square")}</button></div>`;
+  };
+  const rows = groups.map(group => {
+    const matching = query ? group.actors.filter(actor => actor.name.toLocaleLowerCase("de").includes(query)) : group.actors;
+    if (query && !matching.length) return "";
+    const expanded = query ? true : (state.actorGroupOpen[group.id] ?? group.id === "player");
+    const content = expanded
+      ? (matching.map(itemRow).join("") || `<div class="shud-group-empty">Keine zugänglichen Figuren.</div>`)
+      : "";
+    return `<section class="shud-actor-group" data-group="${escapeHtml(group.id)}">
+      <button type="button" class="shud-member-group-toggle" data-actor-group-toggle="${escapeHtml(group.id)}" aria-expanded="${expanded}">
+        ${icon("folder-open")}<span class="shud-group-name">${escapeHtml(group.name)}</span><span class="shud-group-count">${matching.length}</span>${icon(expanded ? "chevron-down" : "chevron-right")}
+      </button><div class="shud-actor-group-items">${content}</div>
+    </section>`;
   }).join("");
-  host.innerHTML = `<div class="shud-actor-directory-head"><label for="shud-actor-search">${actors.length} zugängliche Akteure</label><input id="shud-actor-search" type="search" placeholder="Akteure suchen …" autocomplete="off" aria-label="Akteure suchen" value="${escapeHtml(state.actorFilter)}"><button type="button" data-native-tab="actors">${icon("folder-open")} Original-Akteursverzeichnis</button></div><div class="shud-actor-directory-list">${rows || `<p class="shud-empty">Keine zugänglichen Akteure.</p>`}</div>`;
-  filterActors();
+  const count = groups.reduce((total, group) => total + group.actors.length, 0);
+  host.innerHTML = `<div class="shud-actor-directory-head"><label for="shud-actor-search">${count} zugängliche Akteure</label><input id="shud-actor-search" type="search" placeholder="Akteure suchen …" autocomplete="off" aria-label="Akteure suchen" value="${escapeHtml(state.actorFilter)}"><button type="button" data-native-tab="actors">${icon("folder-open")} Original-Akteursverzeichnis</button></div><div class="shud-actor-directory-list">${rows}</div>`;
   const list = host.querySelector(".shud-actor-directory-list");
   if (list) list.scrollTop = previousScroll;
-  if (wasSearching) host.querySelector("#shud-actor-search")?.focus({preventScroll:true});
+  if (wasSearching) {
+    const input = host.querySelector("#shud-actor-search");
+    input?.focus({preventScroll:true});
+    if (selection?.every(Number.isInteger)) input?.setSelectionRange(...selection);
+  }
 }
-function filterActors() {
-  const query = state.actorFilter.toLocaleLowerCase("de").trim();
-  const host = state.root?.querySelector("#shud-actors-body");
-  host?.querySelectorAll("[data-actor-row]").forEach(row => {
-    row.hidden = Boolean(query) && !row.textContent.toLocaleLowerCase("de").includes(query);
-  });
-}
-
 /** Roll from the actor's own D&D 5e implementation, not a fabricated d20
  * formula, so proficiency, active effects, advantage and the standard roll
  * dialog all remain intact. Kept small; only called on actual user clicks. */

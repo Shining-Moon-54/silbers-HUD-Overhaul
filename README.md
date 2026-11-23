@@ -1,3 +1,16 @@
+## v0.5.1 – Gruppen im Spiel-HUD
+
+- **Player** ist immer die erste, dauerhaft vorhandene HUD-Gruppe. Sie enthält automatisch die Hauptcharaktere aller Nicht-SL-Benutzer, denen über Foundry ein Charakter zugewiesen wurde (auch wenn diese gerade offline sind). Mehrfachzuweisungen werden nur einmal angezeigt.
+- **Eigene D&D-5e-Gruppenakteure** erscheinen darunter mit eigener einklappbarer Mitgliederliste. Spieler sehen dort ausschließlich Gruppen und Mitglieder, auf die sie tatsächlich Zugriff haben. Spielercharaktere bleiben in „Player“, selbst wenn sie zusätzlich einer anderen D&D-Gruppe angehören.
+- Im dritten Menü **Akteure** steht „Player“ ebenfalls zuerst; weitere Akteure erscheinen gruppiert nach ihren Foundry-Akteursordnern, mit einer eigenen Suche. Geschlossene Gruppen werden nicht unnötig vollständig in HTML gerendert.
+- **Drag & Drop, GM-Charakterauswahl und -Abwahl, Chat, Würfel und Initiative** bleiben erhalten. Die geöffneten Gruppen werden pro Benutzer und Welt gespeichert.
+- Die Player-Gruppe ist absichtlich **virtuell im HUD**: Sie erstellt weder einen Foundry-Akteursordner noch ein zusätzliches Group-Dokument und verschiebt keine Charaktere. Das hält die Welt sauber und vermeidet automatische Datenmutation beim Start einer Spielsitzung.
+- Kein VE-Mobile-Asset, keine Fremdschrift und kein externer Code wurde ins Modul kopiert. Die Gruppierung orientiert sich an den von VE Mobile dokumentierten, nativen D&D-5e-Gruppenreferenzen. VE Mobile ist ein eigenständiges, auf Mobilgeräte ausgerichtetes Modul.
+
+**Teststand:** Berechtigungs- und Gruppierungsfälle lokal mit Node getestet. Das Verhalten im Live-Foundry v14/D&D5e muss in einer Testwelt gegengeprüft werden.
+
+---
+
 # Silber HUD Overhaul v0.5.0 – Visual Redesign
 
 **Ausrichtung:** Die freigegebene Dark-Fantasy-Vorlage wird als Maßstab für die tatsächliche Foundry-Oberfläche verwendet. Diese Version ist eine zusammenhängende Überarbeitung, keine weitere Schicht über sechs alten Designs.
