@@ -1,0 +1,118 @@
+/* Compact layout uses existing HUD controls, no second runtime or canvas. */
+#shud-root .shud-compact-only {display:none!important}
+#shud-root.shud-compact {
+  --shud-compact-top:calc(108px + env(safe-area-inset-top,0px));
+  --shud-compact-bottom:calc(70px + env(safe-area-inset-bottom,0px));
+  --shud-compact-width:min(480px,calc(100% - 16px));
+}
+#shud-root.shud-compact .shud-topbar {
+  inset:0 0 auto!important;height:var(--shud-compact-top);pointer-events:none;
+}
+#shud-root.shud-compact .shud-menus {
+  top:env(safe-area-inset-top,0px);left:50%;width:min(540px,calc(100% - 8px));max-width:none;
+  height:55px;min-height:55px;padding:3px 22px 7px;filter:none;
+}
+#shud-root.shud-compact .shud-menus button {
+  min-height:44px;flex:1 1 0;padding:4px 2px;gap:4px;font-size:clamp(11px,2.7vw,14px);
+}
+#shud-root.shud-compact .shud-menus button span {display:inline}
+#shud-root.shud-compact .shud-menus button .shud-svg-icon {width:17px;height:17px;flex:none}
+#shud-root.shud-compact .shud-top-right {
+  top:calc(56px + env(safe-area-inset-top,0px));right:8px;height:46px;min-height:46px;gap:0;
+  max-width:calc(100% - 16px);padding:0 5px;box-shadow:0 2px 8px #0008;
+}
+#shud-root.shud-compact .shud-top-right button {width:44px;height:44px}
+#shud-root.shud-compact .shud-top-right .shud-undo-controls {height:44px;margin:0}
+#shud-root.shud-compact .shud-top-right .shud-undo-history {width:36px}
+#shud-root.shud-compact .shud-combat-pill {display:none}
+#shud-root.shud-compact .shud-menu-popup {
+  top:var(--shud-compact-top)!important;left:50%!important;right:auto!important;transform:translateX(-50%);
+  width:min(430px,calc(100% - 16px));max-height:calc(100% - var(--shud-compact-top) - var(--shud-compact-bottom));
+  overflow:auto;overscroll-behavior:contain;
+}
+#shud-root.shud-compact .shud-menu-popup .shud-dropdown-row {min-height:44px}
+#shud-root.shud-compact :is(.shud-left-dock,.shud-right-dock) {
+  position:absolute;inset:0!important;width:100%!important;height:100%;max-height:none;display:block;
+  pointer-events:none;transition:none;transform:none;
+}
+#shud-root.shud-compact .shud-left-dock {z-index:8}
+#shud-root.shud-compact .shud-right-dock {z-index:9}
+#shud-root.shud-compact :is(.shud-left-dock,.shud-right-dock) > .shud-panel:not(.is-collapsed) {
+  position:absolute;top:var(--shud-compact-top);bottom:var(--shud-compact-bottom);
+  left:50%;right:auto;transform:translateX(-50%);width:var(--shud-compact-width);
+  height:auto;max-height:none;min-height:0;display:flex;flex-direction:column;
+  background:linear-gradient(160deg,#261b29fa,#10111afa 65%,#211524fa);pointer-events:auto;
+  box-shadow:0 3px 16px #0008;
+}
+#shud-root.shud-compact :is(.shud-left-dock,.shud-right-dock) > .shud-panel.is-collapsed {display:none!important}
+#shud-root.shud-compact .shud-panel-header {min-height:50px;height:50px;padding:5px 12px}
+#shud-root.shud-compact .shud-panel-header button {width:44px;height:44px}
+#shud-root.shud-compact .shud-panel-body {flex:1;min-height:0;overscroll-behavior:contain}
+#shud-root.shud-compact .shud-character .shud-panel-body {overflow:auto;display:block}
+#shud-root.shud-compact .shud-character .shud-content {overflow:visible;max-height:none;height:auto}
+#shud-root.shud-compact .shud-tabbar {grid-template-columns:repeat(5,minmax(0,1fr));position:sticky;top:0;z-index:4;background:#18131f}
+#shud-root.shud-compact .shud-tabbar button {min-height:44px;flex-direction:column;font-size:11px}
+#shud-root.shud-compact .shud-tabbar button:nth-child(n+4) span {display:inline}
+#shud-root.shud-compact .shud-hero {height:205px}
+#shud-root.shud-compact .shud-hero-image {width:135px;height:135px;top:40px}
+#shud-root.shud-compact .shud-hero-heading {top:9px}
+#shud-root.shud-compact .shud-choose-character {top:-168px;width:44px;height:44px}
+#shud-root.shud-compact :is(.shud-action-entry,.shud-spell-row,.shud-actor-directory-row,.shud-party-member) {min-height:48px}
+#shud-root.shud-compact :is(.shud-content,.shud-ability-popover,.shud-actor-group) button {min-height:44px}
+#shud-root.shud-compact .shud-party-copy b {font-size:14px}
+#shud-root.shud-compact .shud-party-copy small {font-size:12px}
+#shud-root.shud-compact .shud-chat-tray button {min-height:44px;height:44px;font-size:12px}
+#shud-root.shud-compact .shud-chat-tray {grid-template-columns:repeat(7,minmax(0,1fr))}
+#shud-root.shud-compact .shud-compose-hint {height:44px}
+#shud-root.shud-compact .shud-compose-hint button {height:44px;font-size:12px}
+#shud-root.shud-compact .shud-chat-compose textarea {font-size:16px}
+#shud-root.shud-compact .shud-compose-actions button {min-height:44px;min-width:44px}
+#shud-root.shud-compact .shud-left-dock > .shud-toolrail {
+  position:absolute;top:var(--shud-compact-top);left:4px;width:52px;max-height:calc(100% - var(--shud-compact-top) - var(--shud-compact-bottom));
+  margin:0;gap:3px;padding:4px 3px;overflow:auto;border:1px solid #957046;border-radius:8px;
+}
+#shud-root.shud-compact .shud-left-dock > .shud-toolrail button {width:44px;height:44px;min-height:44px}
+#shud-root.shud-compact .shud-left-dock > :is(.shud-toolpalette,.shud-toolmore) {
+  top:var(--shud-compact-top);left:60px;right:auto;max-width:calc(100% - 70px);
+  max-height:calc(100% - var(--shud-compact-top) - var(--shud-compact-bottom));
+}
+#shud-root.shud-compact .shud-toolpalette button {width:44px;height:44px}
+#shud-root.shud-compact.shud-compact-panel-open .shud-left-dock > :is(.shud-toolrail,.shud-toolpalette,.shud-toolmore) {display:none!important}
+#shud-root.shud-compact .shud-right-dock > .shud-dock-rail {
+  position:absolute;bottom:calc(7px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);
+  width:min(480px,calc(100% - 16px));height:56px;max-height:none;display:flex;flex-direction:row;
+  justify-content:space-evenly;align-items:center;gap:2px;padding:3px 5px;pointer-events:auto;
+  border-radius:23px;background:linear-gradient(#2c1b2b,#10121cfb);box-shadow:0 3px 10px #0008;
+}
+#shud-root.shud-compact .shud-dock-rail :is(.shud-dock-arrow,.shud-dock-rail-rule,.shud-dock-rail-text) {display:none}
+#shud-root.shud-compact .shud-dock-rail button {
+  display:flex!important;flex:1 1 0;min-width:44px;max-width:88px;min-height:44px;height:48px;
+  flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:2px;
+  border:1px solid transparent;border-radius:10px;background:none;color:#e6c392;
+}
+#shud-root.shud-compact .shud-dock-rail .shud-compact-label {display:inline!important}
+#shud-root.shud-compact .shud-dock-rail button span {font:11px Georgia,serif;line-height:1.1}
+#shud-root.shud-compact .shud-dock-rail button:is(.is-open,[aria-pressed="true"]),
+#shud-root.shud-compact:not(.shud-compact-panel-open) .shud-compact-map {border-color:#a98151;background:linear-gradient(#6f2a3e,#2c1726)}
+#shud-root.shud-compact .shud-initiative {top:calc(var(--shud-compact-top) + 3px);max-width:calc(100% - 20px);z-index:7}
+#shud-root.shud-compact.shud-compact-panel-open .shud-initiative {display:none!important}
+#shud-root.shud-compact .shud-initiative-body {min-height:72px;padding:3px}
+#shud-root.shud-compact .shud-initiative-portrait {width:44px;height:44px}
+#shud-root.shud-compact .shud-initiative-combatant.is-current .shud-initiative-portrait {width:52px;height:52px}
+#shud-root.shud-compact .shud-initiative-gm button,#shud-root.shud-compact .shud-initiative-next {min-width:44px;min-height:44px}
+#shud-root.shud-compact .shud-initiative-gm {max-width:none;flex-wrap:nowrap;flex-direction:column}
+#shud-root.shud-compact .shud-ability-popover {max-width:calc(100vw - 16px)}
+@media (max-width:380px) {
+  #shud-root.shud-compact .shud-menus button .shud-svg-icon {display:none}
+  #shud-root.shud-compact .shud-menus {padding-inline:14px}
+}
+@media (min-width:650px) and (max-height:550px) {
+  #shud-root.shud-compact {--shud-compact-top:calc(58px + env(safe-area-inset-top,0px));--shud-compact-width:min(500px,calc(100% - 130px))}
+  #shud-root.shud-compact .shud-menus {left:5px;transform:none;width:min(53%,440px)}
+  #shud-root.shud-compact .shud-top-right {top:calc(4px + env(safe-area-inset-top,0px))}
+  #shud-root.shud-compact .shud-hero {height:160px}
+  #shud-root.shud-compact .shud-hero-image {width:94px;height:94px}
+  #shud-root.shud-compact .shud-choose-character {top:-124px}
+}
+/* Avoid expensive animated transitions on touch displays. */
+#shud-root.shud-compact button {touch-action:manipulation;transition:none}

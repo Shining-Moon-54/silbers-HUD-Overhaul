@@ -1,11 +1,13 @@
 import { registerUndoTracker, getUndoHistory, subscribeUndo, undoLastStep, discardLatestUndo } from "./undo.mjs";
 import { partyGroups, actorDirectoryGroups } from "./groups.mjs";
-/** Silber HUD Overhaul 0.5.1 - Foundry VTT 14 / dnd5e 6.x, global ability roll overlay and refined fantasy UI. */
+import { MOBILE_QUERY, emptyPanels, onlyPanel, togglePanels } from "./responsive.mjs";
+/** Silber HUD Overhaul 0.5.2 - Foundry VTT 14 / dnd5e 6.x, global ability roll overlay and refined fantasy UI. */
 const MOD = "silber-hud-overhaul";
 const ROOT_ID = "shud-root";
 const tabs = ["actions", "spells", "features", "inventory", "details"];
+const compactMedia = window.matchMedia(MOBILE_QUERY);
 const state = { root: null, actorId: null, actorTokenId: null, tab: "spells", menu: null, filter: "", chatPopout: null,
-  panels: { chat: true, party: true, actors: false, character: true }, refreshTimer: null,
+  panels: { chat: true, party: true, actors: false, character: true }, compact: false, desktopPanels: null, compactPanels: null, refreshTimer: null,
   actorFilter: "", chatScrollTimer: null, chatScrollObserver: null,
   composing: false, rollModifier: 0, railOpen: null, railMore: false, submitting: false,
   chatMountPromise: null, chatFallbackRendering: false, chatDebugVisible: false,
@@ -105,6 +107,8 @@ Hooks.once("ready", async () => {
   if (game.system.id !== "dnd5e") ui.notifications.warn("Silber HUD: Zauberaktionen erfordern das System D&D 5e. Die Oberfläche bleibt nutzbar.");
   try {
     loadState();
+    state.compact = compactMedia.matches;
+    if (state.compact) { state.desktopPanels = {...state.panels}; state.panels = emptyPanels(); }
     createHUD();
     if (game.user.isGM) subscribeUndo(() => { refreshUndoButton(); if (state.menu === "undo") { const popup = state.root?.querySelector("#shud-menu-popup"); if (popup) popup.innerHTML = menuHTML("undo"); } });
     refreshUndoButton();
@@ -123,6 +127,7 @@ Hooks.once("ready", async () => {
         if (dock) state.trackerObserver.observe(dock);
       }
     }
+    compactMedia.addEventListener("change", syncCompactMode);
     window.addEventListener("resize", () => {
       updateInitiativePosition();
       if (state.expandedAbility) queueAbilityPopoverPosition();
@@ -147,6 +152,29 @@ function markNativeSceneControls() {
   } catch (error) { console.debug(`[${MOD}] Native controls element unavailable`, error); }
 }
 
+function syncCompactMode() {
+  if (!state.root || state.compact === compactMedia.matches) return;
+  closeAbilityPopover();
+  closeChatComposer();
+  setMenu(null);
+  state.railOpen = null; state.railMore = false;
+  if (compactMedia.matches) {
+    state.desktopPanels = {...state.panels};
+    state.panels = state.compactPanels || emptyPanels();
+  } else {
+    state.compactPanels = {...state.panels};
+    state.panels = state.desktopPanels || emptyPanels();
+  }
+  state.compact = compactMedia.matches;
+  applyPanelStates(); refreshToolRail(); refreshEverything();
+  if (state.panels.chat) { void mountNativeChat(); scheduleChatScroll(); }
+}
+function closeCompactPanels() {
+  if (!state.compact) return;
+  closeAbilityPopover(); closeChatComposer(); setMenu(null);
+  state.panels = emptyPanels(); state.railOpen = null; state.railMore = false;
+  applyPanelStates(); refreshToolRail();
+}
 function storageKey() { return `shud-v1-${game.world?.id || "world"}-${game.user?.id || "user"}`; }
 function loadState() {
   try {
@@ -165,7 +193,7 @@ function loadState() {
   } catch (err) { console.debug(`[${MOD}] Panel state reset`, err); }
 }
 function saveState() {
-  try { localStorage.setItem(storageKey(), JSON.stringify({ ...state.panels, tab: state.tab, trackerCollapsed: state.trackerCollapsed, partyGroupOpen: state.partyGroupOpen, actorGroupOpen: state.actorGroupOpen })); }
+  try { localStorage.setItem(storageKey(), JSON.stringify({ ...(state.compact ? state.desktopPanels : state.panels), tab: state.tab, trackerCollapsed: state.trackerCollapsed, partyGroupOpen: state.partyGroupOpen, actorGroupOpen: state.actorGroupOpen })); }
   catch (err) { console.debug(`[${MOD}] State not saved`, err); }
 }
 function createHUD() {
@@ -231,14 +259,16 @@ function createHUD() {
         <div class="shud-panel-body" id="shud-party-body"></div>
       </section>
       <div class="shud-dock-rail" aria-label="Dock-Steuerung">
+        <button type="button" class="shud-compact-only shud-compact-map" data-action="compact-map" aria-label="Karte anzeigen" title="Karte anzeigen">${icon("map")}<span>Karte</span></button>
+        <button type="button" class="shud-compact-only" data-toggle="chat" aria-label="Chat umschalten" title="Chat umschalten">${icon("comments")}<span>Chat</span></button>
         <button type="button" class="shud-dock-toggle" data-toggle="character" data-dock-toggle="character" aria-controls="shud-character-body" aria-label="Charakter öffnen" aria-expanded="false" title="Charakter öffnen">
-          ${icon("user-shield")}<span class="shud-dock-arrow">${icon("angles-right")}</span>
+          ${icon("user-shield")}<span class="shud-dock-arrow">${icon("angles-right")}</span><span class="shud-compact-only shud-compact-label">Figur</span>
         </button>
         <button type="button" class="shud-dock-toggle" data-toggle="party" data-dock-toggle="party" aria-controls="shud-party-body" aria-label="Gruppe öffnen" aria-expanded="false" title="Gruppe öffnen">
-          ${icon("users")}<span class="shud-dock-arrow">${icon("angles-left")}</span>
+          ${icon("users")}<span class="shud-dock-arrow">${icon("angles-left")}</span><span class="shud-compact-only shud-compact-label">Gruppe</span>
         </button>
         <button type="button" class="shud-dock-toggle" data-toggle="actors" data-dock-toggle="actors" aria-controls="shud-actors-body" aria-label="Akteure öffnen" aria-expanded="false" title="Alle zugänglichen Akteure anzeigen">
-          ${icon("books")}<span class="shud-dock-arrow">${icon("angles-left")}</span>
+          ${icon("books")}<span class="shud-dock-arrow">${icon("angles-left")}</span><span class="shud-compact-only shud-compact-label">Akteure</span>
         </button>
         <span class="shud-dock-rail-rule" aria-hidden="true"></span>
         <span class="shud-dock-rail-text" aria-hidden="true">SILBER HUD</span>
@@ -281,6 +311,8 @@ function createHUD() {
   refreshToolRail();
 }
 function applyPanelStates() {
+  state.root?.classList.toggle("shud-compact", state.compact);
+  state.root?.classList.toggle("shud-compact-panel-open", state.compact && Object.values(state.panels).some(Boolean));
   const leftDock = state.root?.querySelector("#shud-left-dock");
   leftDock?.classList.toggle("has-chat", state.panels.chat);
   state.root?.classList.toggle("shud-chat-open", state.panels.chat);
@@ -408,6 +440,14 @@ function updateInitiativePosition() {
   const track = state.root?.querySelector("#shud-initiative");
   if (!track || track.hidden) return;
   const viewWidth = window.innerWidth;
+  if (state.compact) {
+    const width = Math.min(550, Math.max(0, viewWidth - 76));
+    track.style.left = `${Math.max(64, Math.round((viewWidth - width) / 2))}px`;
+    track.style.right = "auto"; track.style.width = `${width}px`;
+    track.classList.remove("shud-initiative-no-room");
+    track.classList.toggle("shud-initiative-tight", width < 390);
+    return;
+  }
   const leftRect = state.root.querySelector("#shud-left-dock")?.getBoundingClientRect();
   const rightRect = state.root.querySelector("#shud-right-dock")?.getBoundingClientRect();
   const left = Math.max(8, Math.ceil((leftRect?.right || 0) + 12));
@@ -570,6 +610,7 @@ function focusCombatPortrait(id, sheet = false) {
 }
 
 function openNativeTab(name) {
+  closeCompactPanels();
   // Never replace Foundry's own Settings tab. The full original tab contains
   // Manage Modules, Configure Settings, Users and all other core actions.
   document.body.classList.add("shud-vanilla-sidebar");
@@ -619,11 +660,11 @@ async function onHUDClick(event) {
     if (state.menu === "undo") { const popup = state.root?.querySelector("#shud-menu-popup"); if (popup) popup.innerHTML = menuHTML("undo"); }
     return;
   }
+  if (button.dataset.action === "compact-map") { closeCompactPanels(); return; }
   if (button.dataset.toggle) {
     const p = button.dataset.toggle;
-    state.panels[p] = !state.panels[p];
-    if (p === "actors" && state.panels.actors) state.panels.party = false;
-    if (p === "party" && state.panels.party) state.panels.actors = false;
+    if (state.compact) { closeAbilityPopover(); if (p !== "chat") closeChatComposer(); setMenu(null); state.railOpen = null; state.railMore = false; }
+    state.panels = togglePanels(state.panels, p, state.compact);
     // Geschlossene Panels werden aus Performancegründen nicht gerendert.
     // Bei erneutem Öffnen immer den aktuellen Zustand aus Foundry laden.
     if (p === "actors" && state.panels.actors) refreshActors();
@@ -632,7 +673,7 @@ async function onHUDClick(event) {
     if (p === "chat" && !state.panels.chat) closeChatComposer();
     if (p === "character" && !state.panels.character) closeAbilityPopover();
     saveState(); applyPanelStates();
-    if (p === "chat") {
+    if (p === "chat" || state.compact) {
       state.railOpen = null;
       state.railMore = false;
       refreshToolRail();
@@ -792,7 +833,7 @@ async function onHUDClick(event) {
   }
   if (button.dataset.action === "native-sidebar") {
     const expanded = document.body.classList.toggle("shud-vanilla-sidebar");
-    if (expanded) ui.sidebar?.expand?.(); else ui.sidebar?.collapse?.();
+    if (expanded) { closeCompactPanels(); ui.sidebar?.expand?.(); } else ui.sidebar?.collapse?.();
     setMenu(null); return;
   }
   if (button.dataset.action === "configure-settings") { setMenu(null); openNativeTab("settings"); return; }
@@ -1294,6 +1335,7 @@ async function runItemAction(kind, itemId, activityId) {
   try {
     if (kind === "target" || kind === "template") {
       await activatePlacement(kind, item, activity);
+      if (state.compact) closeCompactPanels();
     } else if (kind === "cast") {
       if (typeof activity.use === "function") await activity.use();
       else if (typeof item.use === "function") await item.use();
@@ -1530,7 +1572,8 @@ function refreshToolRail() {
  *  This textbox only exists visually while the user composes. */
 function openChatComposer() {
   if (!state.root) return;
-  state.panels.chat = true;
+  if (state.compact) { closeAbilityPopover(); state.panels = onlyPanel("chat"); }
+  else state.panels.chat = true;
   state.composing = true;
   applyPanelStates();
   refreshToolRail();

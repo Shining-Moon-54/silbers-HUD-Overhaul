@@ -1,8 +1,8 @@
 {
   "id": "silber-hud-overhaul",
   "title": "Silber HUD Overhaul",
-  "description": "Immersives Foundry-v14-Spiel-HUD mit fester Player-Gruppe, getrennten D&D5e-Gruppen, Charakterbogen, Chat, Initiative und Drag-and-Drop.",
-  "version": "0.5.1",
+  "description": "Fantasy-Spiel-HUD für Foundry v14 mit responsivem Kompaktmodus, Gruppen, Charakterbogen, Chat, Initiative und Drag-and-Drop.",
+  "version": "0.5.2",
   "authors": [
     {
       "name": "Silber HUD Projekt"
@@ -18,7 +18,8 @@
   "styles": [
     "styles/hud.css",
     "styles/theme-interactions.css",
-    "styles/theme-v050.css"
+    "styles/theme-v050.css",
+    "styles/responsive.css"
   ],
   "languages": [
     {

@@ -1,3 +1,11 @@
+## Version 0.5.2 – Responsive Kompaktansicht (erste mobile Testversion)
+
+Automatischer Kompaktmodus bei einer Fensterbreite bis 900 CSS-Pixel beziehungsweise bis 1100 CSS-Pixel bei einem primären Touch-Zeigegerät. Karte, Chat, Figur, Gruppe und Akteure sind über eine untere Navigationskapsel erreichbar. Im Kompaktmodus bleibt jeweils nur ein Panel offen. Die Desktop-Panelzustände werden separat gehalten und beim Vergrößern wiederhergestellt. Größere Touch-Ziele, ein scrollbarer Charakterbogen und eine kompakte Ansicht im Querformat gehören zur ersten Umsetzung. Kein weiterer Canvas, keine zusätzliche Abhängigkeit von VE Mobile und keine neue Polling-Schleife.
+
+Die Foundry-Karte und ihre Touch-Gesten bleiben nativ; der Desktop-Drag-and-Drop funktioniert wie bisher. Touch-Tokenplatzierung durch eine eigene Auswählen-und-Platzieren-Funktion und eine vollständige iOS-/Android-Kompatibilitätsprüfung stehen noch aus. Dies ist ein responsives HUD, keine vollständige mobile Foundry-Engine. Bitte zunächst in einer Testwelt auf dem gewünschten Gerät prüfen.
+
+---
+
 ## v0.5.1 – Gruppen im Spiel-HUD
 
 - **Player** ist immer die erste, dauerhaft vorhandene HUD-Gruppe. Sie enthält automatisch die Hauptcharaktere aller Nicht-SL-Benutzer, denen über Foundry ein Charakter zugewiesen wurde (auch wenn diese gerade offline sind). Mehrfachzuweisungen werden nur einmal angezeigt.
