@@ -1,0 +1,31 @@
+name: Silber VE experiment
+on:
+  push:
+    branches: [develop-ve-base]
+    paths:
+      - 'experiments/ve-base/**'
+      - '.github/workflows/ve-prototype.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prototype:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Silvestrae/ve-mobile
+          ref: ba65fbca627e8102f30719a432586375cc5164cf
+          path: upstream-ve
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build and check independent prototype
+        run: python3 experiments/ve-base/build.py --upstream upstream-ve --out dist-ve
+      - uses: actions/upload-artifact@v4
+        with:
+          name: silber-hud-ve-prototype
+          path: dist-ve/
+          if-no-files-found: error
